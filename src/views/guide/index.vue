@@ -1,13 +1,7 @@
 <template>
   <div class="app-container">
-    <aside>
-      The guide page is useful for some people who entered the project for the first time. You can briefly introduce the
-      features of the project. Demo is based on
-      <a href="https://github.com/kamranahmedse/driver.js" target="_blank">driver.js.</a>
-    </aside>
-    <el-button icon="el-icon-question" type="primary" @click.prevent.stop="guide">
-      Show Guide
-    </el-button>
+    <aside>指南页对于一些第一次进入项目的人是有用的。你可以简单介绍一下这个项目的特点。</aside>
+    <el-button icon="el-icon-question" type="primary" @click.prevent.stop="guide">打开指南</el-button>
   </div>
 </template>
 
@@ -24,7 +18,12 @@ export default {
     }
   },
   mounted() {
-    this.driver = new Driver()
+    this.driver = new Driver({
+      doneBtnText: '结束',
+      closeBtnText: '关闭', // Text on the close button for this step
+      nextBtnText: '下一步', // Next button text for this step
+      prevBtnText: '上一步'
+    })
   },
   methods: {
     guide() {
