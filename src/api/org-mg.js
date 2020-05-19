@@ -4,8 +4,11 @@ import request from '@/utils/request'
 export function fetchStaffList(query) {
   return request({
     url: '/officialcars/user/page',
-    method: 'get',
-    body: query
+    method: 'post',
+    headers: {
+      contentType: 'application/json'
+    },
+    data: query
   })
 }
 // 企业管理
