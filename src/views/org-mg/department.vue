@@ -17,7 +17,7 @@
         </div>
       </el-form>
     </div>
-    <div style="margin-top: 10px;"><el-button type="primary" @click="onSubmit">+新增部门</el-button></div>
+    <div style="margin-top: 10px;"><el-button type="primary" @click="handleAddtionClick">+新增部门</el-button></div>
     <div class="content">
       <div class="tree-header">
         <div>部门树</div>
@@ -39,10 +39,27 @@
         </span>
       </el-tree>
     </div>
+    <el-dialog title="新增部门" :visible.sync="dialogFormVisible" width="30%">
+      <el-form :model="addtionForm" style="padding-right: 40px;">
+        <el-form-item label="上级部门" label-width="100px">
+          <el-select v-model="addtionForm.preDpt" placeholder="请选择" style="width: 100%;">
+            <el-option label="区域一" value="shanghai" />
+            <el-option label="区域二" value="beijing" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="部门名称" label-width="100px">
+          <el-input v-model="addtionForm.name" placeholder="输入新增部门的名称" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handleAddConfirm">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
-import { fetchDepartmentList } from '@/api/org-mg'
+import { fetchDepartmentList, addDepartment } from '@/api/org-mg'
 let id = 1000
 export default {
   name: 'Department',
@@ -84,6 +101,11 @@ export default {
       }]
     }]
     return {
+      addtionForm: {
+        preDpt: '',
+        name: ''
+      },
+      dialogFormVisible: false,
       conditionForm: {
         statusList: [{
           label: '-1',
@@ -117,6 +139,19 @@ export default {
     })
   },
   methods: {
+    handleAddConfirm() {
+      const dataTemp = {
+        name: this.addtionForm.name
+      }
+      addDepartment(dataTemp).then(res => {
+        console.log('staff.vue mounted addDepartment success', res)
+      }).catch(err => {
+        console.log('staff.vue mounted addDepartment failure', err)
+      })
+    },
+    handleAddtionClick() {
+      this.dialogFormVisible = true
+    },
     onSubmit() {
       console.log('department.vue methods onSubmit')
     },

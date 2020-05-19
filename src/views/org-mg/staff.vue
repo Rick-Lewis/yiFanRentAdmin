@@ -17,7 +17,7 @@
         </div>
       </el-form>
     </div>
-    <div style="margin-top: 10px;"><el-button type="primary" @click="onSubmit">+新增人员</el-button></div>
+    <div style="margin-top: 10px;"><el-button type="primary" @click="handleAddtionClick">+新增人员</el-button></div>
     <div class="content">
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="name" label="姓名" align="center" />
@@ -36,15 +36,45 @@
         <el-pagination background :page-sizes="[5, 8, 10]" :page-size="12" layout="total, prev, pager, next, sizes, jumper" :total="10" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </div>
+    <el-dialog title="新增人员" :visible.sync="dialogFormVisible" width="30%">
+      <el-form :model="addtionForm" style="padding-right: 40px;">
+        <el-form-item label="姓名" label-width="100px">
+          <el-input v-model="addtionForm.name" placeholder="请输入员工姓名" />
+        </el-form-item>
+        <el-form-item label="员工编号" label-width="100px">
+          <el-input v-model="addtionForm.number" placeholder="请输入员工编号" />
+        </el-form-item>
+        <el-form-item label="所属部门" label-width="100px">
+          <el-select v-model="addtionForm.preDpt" placeholder="请选择" style="width: 100%;">
+            <el-option label="区域一" value="shanghai" />
+            <el-option label="区域二" value="beijing" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="联系电话" label-width="100px">
+          <el-input v-model="addtionForm.telephone" placeholder="请输入员工手机号" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handleAddConfirm">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
-import { fetchStaffList } from '@/api/org-mg'
+import { fetchStaffList, addStaff } from '@/api/org-mg'
 export default {
   name: 'Staff',
   components: {},
   data: function() {
     return {
+      addtionForm: {
+        preDpt: '',
+        name: '',
+        number: '',
+        telephone: ''
+      },
+      dialogFormVisible: false,
       conditionForm: {
         statusList: [{
           label: '-1',
@@ -143,11 +173,26 @@ export default {
     }
     fetchStaffList(dataTemp).then(res => {
       console.log('staff.vue mounted fetchStaffList success', res)
+      // this.tableData.push(...res.data.data)
     }).catch(err => {
       console.log('staff.vue mounted fetchStaffList failure', err)
     })
   },
   methods: {
+    handleAddConfirm() {
+      const dataTemp = {
+        name: this.addtionForm.name,
+        telephone: this.addtionForm.telephone
+      }
+      addStaff(dataTemp).then(res => {
+        console.log('staff.vue mounted addStaff success', res)
+      }).catch(err => {
+        console.log('staff.vue mounted addStaff failure', err)
+      })
+    },
+    handleAddtionClick() {
+      this.dialogFormVisible = true
+    },
     onSubmit() {
       console.log('staff.vue methods onSubmit')
     },
