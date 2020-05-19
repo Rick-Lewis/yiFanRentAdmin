@@ -40,6 +40,7 @@
   </div>
 </template>
 <script>
+import { fetchEnterpriseList } from '@/api/org-mg'
 export default {
   name: 'Enterprise',
   components: {},
@@ -140,12 +141,23 @@ export default {
         phone: '130000000000',
         status: '已启用'
       }],
-      pageIndex: 1
+      pageIndex: 1,
+      pageSize: 10
     }
   },
   computed: {},
   created() {},
-  mounted() {},
+  mounted() {
+    const dataTemp = {
+      pageIndex: this.pageIndex,
+      pageSize: this.pageSize
+    }
+    fetchEnterpriseList(dataTemp).then(res => {
+      console.log('staff.vue mounted fetchEnterpriseList success', res)
+    }).catch(err => {
+      console.log('staff.vue mounted fetchEnterpriseList failure', err)
+    })
+  },
   methods: {
     onSubmit() {
       console.log('enterprise.vue methods onSubmit')

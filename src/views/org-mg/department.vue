@@ -42,6 +42,7 @@
   </div>
 </template>
 <script>
+import { fetchDepartmentList } from '@/api/org-mg'
 let id = 1000
 export default {
   name: 'Department',
@@ -97,12 +98,24 @@ export default {
         status: '0',
         name: ''
       },
-      data: JSON.parse(JSON.stringify(data))
+      data: JSON.parse(JSON.stringify(data)),
+      pageIndex: 1,
+      pageSize: 10
     }
   },
   computed: {},
   created() {},
-  mounted() {},
+  mounted() {
+    const dataTemp = {
+      pageIndex: this.pageIndex,
+      pageSize: this.pageSize
+    }
+    fetchDepartmentList(dataTemp).then(res => {
+      console.log('staff.vue mounted fetchDepartmentList success', res)
+    }).catch(err => {
+      console.log('staff.vue mounted fetchDepartmentList failure', err)
+    })
+  },
   methods: {
     onSubmit() {
       console.log('department.vue methods onSubmit')

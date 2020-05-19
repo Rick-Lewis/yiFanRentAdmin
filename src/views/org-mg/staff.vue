@@ -130,13 +130,18 @@ export default {
         phone: '130000000000',
         status: '已启用'
       }],
-      pageIndex: 1
+      pageIndex: 1,
+      pageSize: 10
     }
   },
   computed: {},
   created() {},
   mounted() {
-    fetchStaffList().then(res => {
+    const dataTemp = {
+      pageIndex: this.pageIndex,
+      pageSize: this.pageSize
+    }
+    fetchStaffList(dataTemp).then(res => {
       console.log('staff.vue mounted fetchStaffList success', res)
     }).catch(err => {
       console.log('staff.vue mounted fetchStaffList failure', err)
