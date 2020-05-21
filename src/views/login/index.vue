@@ -50,7 +50,7 @@
       <div style="position:relative">
         <div class="tips">
           <span>Username : admin</span>
-          <span>Password : Admin123</span>
+          <span>Password : 123456</span>
         </div>
       </div>
     </el-form>
@@ -90,7 +90,7 @@ export default {
     return {
       loginForm: {
         username: 'admin',
-        password: 'Admin123'
+        password: '123456'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],

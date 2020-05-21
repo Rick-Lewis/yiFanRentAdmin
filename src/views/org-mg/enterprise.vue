@@ -3,16 +3,16 @@
     <div class="header">
       <el-form ref="form" :model="conditionForm" label-width="85px" label-suffix="：">
         <el-form-item label="单位状态">
-          <el-radio-group v-model="conditionForm.status" size="small">
+          <el-radio-group v-model="conditionForm.status" size="small" @change="handleRadioGroupChange">
             <el-radio v-for="(item, index) in conditionForm.statusList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <div class="other-container">
           <el-form-item label="单位名称">
-            <el-input v-model="conditionForm.reason" placeholder="请输入关键字搜索" />
+            <el-input v-model="conditionForm.name" placeholder="请输入关键字搜索" />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="onSubmit">查询</el-button>
+            <el-button type="primary" @click="onSearch">查询</el-button>
           </el-form-item>
         </div>
       </el-form>
@@ -21,11 +21,13 @@
     <div class="content">
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="name" label="单位名称" align="center" />
-        <el-table-column prop="number" label="单位编号" align="center" />
-        <el-table-column prop="admin" label="管理员" align="center" />
-        <el-table-column prop="account" label="管理员账号" align="center" />
-        <el-table-column prop="phone" label="管理员联系方式" align="center" />
-        <el-table-column prop="status" label="状态" align="center" />
+        <el-table-column prop="note" label="单位编号" align="center" />
+        <el-table-column prop="user.name" label="管理员" align="center" />
+        <el-table-column prop="user.username" label="管理员账号" align="center" />
+        <el-table-column prop="user.telephone" label="联系方式" align="center" />
+        <el-table-column prop="status" label="状态" align="center">
+          <template slot-scope="scope"><div>{{ scope.row.status ? '已启用' : '已停用' }}</div></template>
+        </el-table-column>
         <el-table-column prop="action" label="操作" align="center" width="300px">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
@@ -35,11 +37,11 @@
         </el-table-column>
       </el-table>
       <div class="pagination-cocntainer">
-        <el-pagination background :page-sizes="[5, 8, 10]" :page-size="12" layout="total, prev, pager, next, sizes, jumper" :total="10" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+        <el-pagination background :page-sizes="[5, 8, 10]" :page-size="12" layout="total, prev, pager, next, sizes, jumper" :total="total" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </div>
     <el-dialog title="新增企业" :visible.sync="dialogFormVisible" width="30%">
-      <el-form :model="addtionForm" style="padding-right: 40px;">
+      <el-form ref="addtionForm" :model="addtionForm" style="padding-right: 40px;">
         <el-form-item label="单位名称" label-width="100px">
           <el-input v-model="addtionForm.name" placeholder="请输入单位名称" />
         </el-form-item>
@@ -50,9 +52,12 @@
           <el-input v-model="addtionForm.admin" placeholder="请输入管理员姓名" />
         </el-form-item>
         <el-form-item label="管理员账号" label-width="100px">
-          <el-input v-model="addtionForm.account" placeholder="请输入账号" />
+          <el-input v-model="addtionForm.username" placeholder="请输入账号" />
         </el-form-item>
-        <el-form-item label="管理员联系方式" label-width="100px">
+        <el-form-item label="密码" label-width="100px">
+          <el-input v-model="addtionForm.password" placeholder="请输入密码" />
+        </el-form-item>
+        <el-form-item label="联系方式" label-width="100px">
           <el-input v-model="addtionForm.telephone" placeholder="请输入管理员手机号" />
         </el-form-item>
         <el-form-item label="发票抬头" label-width="100px">
@@ -70,6 +75,7 @@
   </div>
 </template>
 <script>
+import { Message } from 'element-ui'
 import { fetchEnterpriseList, addEnterprise } from '@/api/org-mg'
 export default {
   name: 'Enterprise',
@@ -80,10 +86,11 @@ export default {
         name: '',
         note: '',
         admin: '',
-        account: '',
+        username: '',
         telephone: '',
         invoice_title: '',
-        tax_no: ''
+        tax_no: '',
+        password: ''
       },
       dialogFormVisible: false,
       conditionForm: {
@@ -97,92 +104,13 @@ export default {
           label: '1',
           value: '已启用'
         }],
-        status: '0',
+        status: '-1',
         name: ''
       },
-      tableData: [{
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '县政府',
-        number: '0001',
-        admin: '张三',
-        account: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }],
+      tableData: [],
       pageIndex: 1,
-      pageSize: 10
+      pageSize: 5,
+      total: 0
     }
   },
   computed: {},
@@ -193,33 +121,95 @@ export default {
       pageSize: this.pageSize
     }
     fetchEnterpriseList(dataTemp).then(res => {
-      console.log('staff.vue mounted fetchEnterpriseList success', res)
+      console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+      this.tableData.push(...res.data.data)
+      this.total = res.data.total
     }).catch(err => {
-      console.log('staff.vue mounted fetchEnterpriseList failure', err)
+      console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
     })
   },
   methods: {
+    handleRadioGroupChange(val) {
+      console.log('enterprise.vue methods handleRadioGroupChange', val)
+      const dataTemp = {
+        name: this.conditionForm.name,
+        status: val === '-1' ? '' : val,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchEnterpriseList(dataTemp).then(res => {
+        console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
+      })
+    },
+    refreshView() {
+      // In order to make the cached page re-rendered
+      this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
+
+      const { fullPath } = this.$route
+
+      this.$nextTick(() => {
+        this.$router.replace({
+          path: '/redirect' + fullPath
+        })
+      })
+    },
     handleAddConfirm() {
       const dataTemp = {
         name: this.addtionForm.name,
         note: this.addtionForm.note,
-        admin: this.addtionForm.admin,
-        account: this.addtionForm.account,
-        telephone: this.addtionForm.telephone,
         invoice_title: this.addtionForm.invoice_title,
-        tax_no: this.addtionForm.tax_no
+        tax_no: this.addtionForm.tax_no,
+        user: {
+          name: this.addtionForm.admin,
+          telephone: this.addtionForm.telephone,
+          username: this.addtionForm.username,
+          password: this.addtionForm.password
+        }
       }
       addEnterprise(dataTemp).then(res => {
-        console.log('staff.vue mounted addEnterprise success', res)
+        console.log('enterprise.vue mounted addEnterprise success', res)
+        this.$refs['addtionForm'].resetFields()
+        this.refreshView()
+        this.dialogFormVisible = false
+        Message({
+          message: res.message,
+          type: 'success',
+          duration: 5 * 1000
+        })
       }).catch(err => {
-        console.log('staff.vue mounted addEnterprise failure', err)
+        console.log('enterprise.vue mounted addEnterprise failure', err)
+        this.dialogFormVisible = false
+        Message({
+          message: '操作失败',
+          type: 'warning',
+          duration: 5 * 1000
+        })
       })
     },
     handleAddtionClick() {
       this.dialogFormVisible = true
     },
-    onSubmit() {
-      console.log('enterprise.vue methods onSubmit')
+    onSearch() {
+      console.log('enterprise.vue methods onSearch')
+      const dataTemp = {
+        name: this.conditionForm.name,
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchEnterpriseList(dataTemp).then(res => {
+        console.log('enterprise.vue handleSizeChange fetchEnterpriseList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('enterprise.vue handleSizeChange fetchEnterpriseList failure', err)
+      })
     },
     handleEdit() {
       console.log('enterprise.vue methods handleEdit')
@@ -229,10 +219,37 @@ export default {
     },
     handleSizeChange(val) {
       console.log('enterprise.vue methods handleSizeChange', val, this.pageIndex)
+      this.pageSize = val
+      const dataTemp = {
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchEnterpriseList(dataTemp).then(res => {
+        console.log('enterprise.vue handleSizeChange fetchEnterpriseList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('enterprise.vue handleSizeChange fetchEnterpriseList failure', err)
+      })
     },
     handleCurrentChange(val) {
       console.log('enterprise.vue methods handleCurrentChange', val)
       this.pageIndex = val
+      const dataTemp = {
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchEnterpriseList(dataTemp).then(res => {
+        console.log('enterprise.vue handleSizeChange fetchEnterpriseList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('enterprise.vue handleSizeChange fetchEnterpriseList failure', err)
+      })
     }
   }
 }

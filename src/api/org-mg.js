@@ -4,11 +4,8 @@ import request from '@/utils/request'
 export function fetchStaffList(data) {
   return request({
     url: '/officialcars/user/page',
-    method: 'post',
-    headers: {
-      contentType: 'application/json'
-    },
-    data
+    method: 'get',
+    params: data
   })
 }
 export function addStaff(data) {
@@ -22,13 +19,13 @@ export function addStaff(data) {
 export function fetchEnterpriseList(data) {
   return request({
     url: '/officialcars/enterprise/page',
-    method: 'post',
-    data
+    method: 'get',
+    params: data
   })
 }
 export function addEnterprise(data) {
   return request({
-    url: '/officialcars/Enterprise/save',
+    url: '/officialcars/enterprise/save',
     method: 'post',
     data
   })
@@ -37,8 +34,8 @@ export function addEnterprise(data) {
 export function fetchDepartmentList(data) {
   return request({
     url: '/officialcars/department/page',
-    method: 'post',
-    data
+    method: 'get',
+    params: data
   })
 }
 export function addDepartment(data) {

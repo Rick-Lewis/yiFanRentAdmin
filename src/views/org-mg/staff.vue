@@ -3,16 +3,16 @@
     <div class="header">
       <el-form ref="form" :model="conditionForm" label-width="85px" label-suffix="：">
         <el-form-item label="审批状态">
-          <el-radio-group v-model="conditionForm.status" size="small">
+          <el-radio-group v-model="conditionForm.status" size="small" @change="handleRadioGroupChange">
             <el-radio v-for="(item, index) in conditionForm.statusList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <div class="other-container">
           <el-form-item label="部门名称">
-            <el-input v-model="conditionForm.reason" placeholder="请输入关键字搜索" />
+            <el-input v-model="conditionForm.name" placeholder="请输入关键字搜索" />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="onSubmit">查询</el-button>
+            <el-button type="primary" @click="onSearch">查询</el-button>
           </el-form-item>
         </div>
       </el-form>
@@ -23,8 +23,13 @@
         <el-table-column prop="name" label="姓名" align="center" />
         <el-table-column prop="number" label="员工编号" align="center" />
         <el-table-column prop="dept" label="所在部门" align="center" />
-        <el-table-column prop="phone" label="联系电话" align="center" />
-        <el-table-column prop="status" label="状态" align="center" />
+        <el-table-column prop="is_admin" label="是否管理员" align="center">
+          <template slot-scope="scope"><div>{{ scope.row.is_admin ? '是' : '否' }}</div></template>
+        </el-table-column>
+        <el-table-column prop="telephone" label="联系电话" align="center" />
+        <el-table-column prop="status" label="状态" align="center">
+          <template slot-scope="scope"><div>{{ scope.row.status ? '已启用' : '已停用' }}</div></template>
+        </el-table-column>
         <el-table-column prop="action" label="操作" align="center">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
@@ -33,11 +38,11 @@
         </el-table-column>
       </el-table>
       <div class="pagination-cocntainer">
-        <el-pagination background :page-sizes="[5, 8, 10]" :page-size="12" layout="total, prev, pager, next, sizes, jumper" :total="10" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+        <el-pagination background :page-sizes="[5, 8, 10]" :page-size="12" layout="total, prev, pager, next, sizes, jumper" :total="total" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </div>
     <el-dialog title="新增人员" :visible.sync="dialogFormVisible" width="30%">
-      <el-form :model="addtionForm" style="padding-right: 40px;">
+      <el-form ref="addtionForm" :model="addtionForm" style="padding-right: 40px;">
         <el-form-item label="姓名" label-width="100px">
           <el-input v-model="addtionForm.name" placeholder="请输入员工姓名" />
         </el-form-item>
@@ -62,7 +67,8 @@
   </div>
 </template>
 <script>
-import { fetchStaffList, addStaff } from '@/api/org-mg'
+import { fetchStaffList, addStaff, fetchDepartmentList } from '@/api/org-mg'
+import { Message } from 'element-ui'
 export default {
   name: 'Staff',
   components: {},
@@ -86,82 +92,13 @@ export default {
           label: '1',
           value: '已启用'
         }],
-        status: '0',
+        status: '-1',
         name: ''
       },
-      tableData: [{
-        id: '',
-        name: '张三丰',
-        number: '0001',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '张无忌',
-        number: '0002',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }, {
-        id: '',
-        name: '郭靖',
-        number: '0003',
-        dept: '税务组',
-        phone: '130000000000',
-        status: '已启用'
-      }],
+      tableData: [],
       pageIndex: 1,
-      pageSize: 10
+      pageSize: 10,
+      total: 0
     }
   },
   computed: {},
@@ -173,12 +110,42 @@ export default {
     }
     fetchStaffList(dataTemp).then(res => {
       console.log('staff.vue mounted fetchStaffList success', res)
-      // this.tableData.push(...res.data.data)
+      this.tableData.push(...res.data.data)
+      this.total = res.data.total
     }).catch(err => {
       console.log('staff.vue mounted fetchStaffList failure', err)
     })
   },
   methods: {
+    handleRadioGroupChange(val) {
+      console.log('enterprise.vue methods handleRadioGroupChange', val)
+      const dataTemp = {
+        name: this.conditionForm.name,
+        status: val === '-1' ? '' : val,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchStaffList(dataTemp).then(res => {
+        console.log('staff.vue mounted fetchStaffList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('staff.vue mounted fetchStaffList failure', err)
+      })
+    },
+    refreshView() {
+      // In order to make the cached page re-rendered
+      this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
+
+      const { fullPath } = this.$route
+
+      this.$nextTick(() => {
+        this.$router.replace({
+          path: '/redirect' + fullPath
+        })
+      })
+    },
     handleAddConfirm() {
       const dataTemp = {
         name: this.addtionForm.name,
@@ -186,15 +153,52 @@ export default {
       }
       addStaff(dataTemp).then(res => {
         console.log('staff.vue mounted addStaff success', res)
+        this.$refs['addtionForm'].resetFields()
+        this.refreshView()
+        this.dialogFormVisible = false
+        Message({
+          message: res.message,
+          type: 'success',
+          duration: 5 * 1000
+        })
       }).catch(err => {
         console.log('staff.vue mounted addStaff failure', err)
+        this.dialogFormVisible = false
+        Message({
+          message: '操作失败',
+          type: 'warning',
+          duration: 5 * 1000
+        })
       })
     },
     handleAddtionClick() {
       this.dialogFormVisible = true
+      const dataTemp = {
+        pageIndex: 1,
+        pageSize: 1000
+      }
+      fetchDepartmentList(dataTemp).then(res => {
+        console.log('staff.vue mounted fetchDepartmentList success', res)
+      }).catch(err => {
+        console.log('staff.vue mounted fetchDepartmentList failure', err)
+      })
     },
-    onSubmit() {
-      console.log('staff.vue methods onSubmit')
+    onSearch() {
+      console.log('staff.vue methods onSearch')
+      const dataTemp = {
+        name: this.conditionForm.name,
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchStaffList(dataTemp).then(res => {
+        console.log('staff.vue mounted fetchStaffList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('staff.vue mounted fetchStaffList failure', err)
+      })
     },
     handleEdit() {
       console.log('staff.vue methods handleEdit')
@@ -204,10 +208,37 @@ export default {
     },
     handleSizeChange(val) {
       console.log('staff.vue methods handleSizeChange', val, this.pageIndex)
+      this.pageSize = val
+      const dataTemp = {
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchStaffList(dataTemp).then(res => {
+        console.log('staff.vue mounted fetchStaffList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('staff.vue mounted fetchStaffList failure', err)
+      })
     },
     handleCurrentChange(val) {
       console.log('staff.vue methods handleCurrentChange', val)
       this.pageIndex = val
+      const dataTemp = {
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchStaffList(dataTemp).then(res => {
+        console.log('staff.vue mounted fetchStaffList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('staff.vue mounted fetchStaffList failure', err)
+      })
     }
   }
 }
