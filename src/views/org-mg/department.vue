@@ -3,7 +3,7 @@
     <div class="header">
       <el-form ref="form" :model="conditionForm" label-width="85px" label-suffix="：">
         <el-form-item label="审批状态">
-          <el-radio-group v-model="conditionForm.status" size="small">
+          <el-radio-group v-model="conditionForm.status" size="small" @change="handleRadioGroupChange">
             <el-radio v-for="(item, index) in conditionForm.statusList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -24,27 +24,26 @@
         <div>状态</div>
         <div>操作</div>
       </div>
-      <el-tree :data="data" show-checkbox node-key="id" :expand-on-click-node="false" style="margin-top: 5px;">
-        <span slot-scope="{ node, item }" class="custom-tree-node">
-          <span>{{ node.label }}</span>
-          <span>已启用</span>
+      <el-tree :data="tableData" show-checkbox node-key="id" :expand-on-click-node="false" style="margin-top: 5px;">
+        <span slot-scope="{ node }" class="custom-tree-node">
+          <span>{{ node.data.label }}</span>
+          <span>{{ node.data.status ? '已启用' : '已停用' }}</span>
           <span>
-            <el-button type="text" size="mini" @click="() => handleEdit(item)">
+            <el-button type="text" size="mini" @click="() => handleEdit(node.data)">
               编辑
             </el-button>
-            <el-button type="text" size="mini" @click="() => handleBlockUp(node, item)">
-              停用
+            <el-button type="text" size="mini" @click="() => handleBlockUp(node.data)">
+              {{ node.data.status ? '停用' : '启用' }}
             </el-button>
           </span>
         </span>
       </el-tree>
     </div>
-    <el-dialog title="新增部门" :visible.sync="dialogFormVisible" width="30%">
+    <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增企业' : '编辑企业'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
       <el-form :model="addtionForm" style="padding-right: 40px;">
         <el-form-item label="上级部门" label-width="100px">
-          <el-select v-model="addtionForm.preDpt" placeholder="请选择" style="width: 100%;">
-            <el-option label="区域一" value="shanghai" />
-            <el-option label="区域二" value="beijing" />
+          <el-select v-model="addtionForm.parent" placeholder="请选择" style="width: 100%;">
+            <el-option v-for="(item, index) in departList" :key="index" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="部门名称" label-width="100px">
@@ -52,7 +51,7 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button @click="handleAddCancel">取 消</el-button>
         <el-button type="primary" @click="handleAddConfirm">确 定</el-button>
       </div>
     </el-dialog>
@@ -60,52 +59,22 @@
 </template>
 <script>
 import { fetchDepartmentList, addDepartment } from '@/api/org-mg'
+import { Message } from 'element-ui'
 let id = 1000
 export default {
   name: 'Department',
   components: {},
   data: function() {
-    const data = [{
-      id: 1,
-      label: '一级 1',
-      children: [{
-        id: 4,
-        label: '二级 1-1',
-        children: [{
-          id: 9,
-          label: '三级 1-1-1'
-        }, {
-          id: 10,
-          label: '三级 1-1-2'
-        }]
-      }]
-    }, {
-      id: 2,
-      label: '一级 2',
-      children: [{
-        id: 5,
-        label: '二级 2-1'
-      }, {
-        id: 6,
-        label: '二级 2-2'
-      }]
-    }, {
-      id: 3,
-      label: '一级 3',
-      children: [{
-        id: 7,
-        label: '二级 3-1'
-      }, {
-        id: 8,
-        label: '二级 3-2'
-      }]
-    }]
     return {
       addtionForm: {
-        preDpt: '',
+        parent: '',
         name: ''
       },
-      dialogFormVisible: false,
+      dialogConfig: {
+        dialogFormVisible: false,
+        currentStatus: '' // 当前的状态，编辑（edit）或者是新增（add）
+      },
+      currentItem: null, // 记录当前状态下操作的目标数据
       conditionForm: {
         statusList: [{
           label: '-1',
@@ -117,12 +86,13 @@ export default {
           label: '1',
           value: '已启用'
         }],
-        status: '0',
+        status: '-1',
         name: ''
       },
-      data: JSON.parse(JSON.stringify(data)),
+      departList: [],
+      tableData: [],
       pageIndex: 1,
-      pageSize: 10
+      pageSize: 1000
     }
   },
   computed: {},
@@ -134,23 +104,134 @@ export default {
     }
     fetchDepartmentList(dataTemp).then(res => {
       console.log('staff.vue mounted fetchDepartmentList success', res)
+      const temp = this.handleDepartmentList(res.data.data)
+      this.departList.push(...res.data.data)
+      this.tableData.push(...temp)
     }).catch(err => {
       console.log('staff.vue mounted fetchDepartmentList failure', err)
     })
   },
   methods: {
-    handleAddConfirm() {
-      const dataTemp = {
-        name: this.addtionForm.name
+    handleBlockUp(node, data) {
+      console.log('enterprise.vue methods handleBlockUp', node, data)
+    },
+    handleEdit(row) {
+      console.log('enterprise.vue methods handleEdit', row)
+      this.addtionForm = {
+        id: row.id,
+        name: row.name
       }
-      addDepartment(dataTemp).then(res => {
+      if (row.parent !== 0) {
+        this.addtionForm.parent = row.parent
+      }
+      this.dialogConfig.currentStatus = 'edit'
+      this.dialogConfig.currentItem = row
+      this.dialogConfig.dialogFormVisible = true
+    },
+    refreshView() {
+      // In order to make the cached page re-rendered
+      this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
+
+      const { fullPath } = this.$route
+
+      this.$nextTick(() => {
+        this.$router.replace({
+          path: '/redirect' + fullPath
+        })
+      })
+    },
+    handleDepartmentList(data) {
+      if (data && data.length > 0) {
+        const result = []
+        for (let i = 0; i < data.length; i++) {
+          const temp = {
+            id: data[i].id,
+            label: data[i].name,
+            parent: data[i].parent === undefined ? 0 : data[i].parent,
+            status: data[i].status
+          }
+          if (data[i].level === undefined) {
+            if (!result[0]) {
+              result[0] = []
+            }
+            result[0].push(temp)
+          } else {
+            if (!result[data[i].level]) {
+              result[data[i].level] = []
+            }
+            result[data[i].level].push(temp)
+          }
+        }
+        return this.toTree(result)
+      } else {
+        return []
+      }
+    },
+    toTree(result) {
+      while (result.length > 1) {
+        const yList = result.pop()
+        const temp = result[result.length - 1]
+        for (let i = 0; i < yList.length; i++) {
+          for (let j = 0; j < temp.length; j++) {
+            if (temp[j].id === yList[i].parent) { // yList[i]的父节点是temp[j]
+              if (!temp[j].children) {
+                temp[j].children = []
+              }
+              temp[j].children.push(yList[i])
+              break
+            }
+          }
+        }
+      }
+      return result[0]
+    },
+    handleRadioGroupChange(val) {
+      console.log('enterprise.vue methods handleRadioGroupChange', val)
+      const dataTemp = {
+        name: this.conditionForm.name,
+        status: val === '-1' ? '' : val,
+        pageIndex: 1,
+        pageSize: this.pageSize
+      }
+      fetchDepartmentList(dataTemp).then(res => {
+        console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+        this.tableData.length = 0
+        // this.tableData.push(...res.data.data)
+      }).catch(err => {
+        console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
+      })
+    },
+    handleAddCancel() {
+      this.addtionForm = {
+        name: '',
+        parent: ''
+      }
+      this.dialogConfig.currentStatus = ''
+      this.currentIndex = -1
+      this.dialogConfig.dialogFormVisible = false
+    },
+    handleAddConfirm() {
+      addDepartment(this.addtionForm).then(res => {
         console.log('staff.vue mounted addDepartment success', res)
+        this.refreshView()
+        this.handleAddCancel()
+        Message({
+          message: res.message,
+          type: 'success',
+          duration: 5 * 1000
+        })
       }).catch(err => {
         console.log('staff.vue mounted addDepartment failure', err)
+        Message({
+          message: '操作失败',
+          type: 'warning',
+          duration: 5 * 1000
+        })
       })
     },
     handleAddtionClick() {
-      this.dialogFormVisible = true
+      this.dialogConfig.currentStatus = 'add'
+      this.dialogConfig.dialogFormVisible = true
     },
     onSubmit() {
       console.log('department.vue methods onSubmit')

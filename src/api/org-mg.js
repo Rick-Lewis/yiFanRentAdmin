@@ -30,6 +30,13 @@ export function addEnterprise(data) {
     data
   })
 }
+export function reset(data) {
+  return request({
+    url: '/officialcars/user/password/reset',
+    method: 'post',
+    data
+  })
+}
 // 部门管理
 export function fetchDepartmentList(data) {
   return request({

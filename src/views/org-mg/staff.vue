@@ -8,7 +8,7 @@
           </el-radio-group>
         </el-form-item>
         <div class="other-container">
-          <el-form-item label="部门名称">
+          <el-form-item label="姓名">
             <el-input v-model="conditionForm.name" placeholder="请输入关键字搜索" />
           </el-form-item>
           <el-form-item>
@@ -21,8 +21,8 @@
     <div class="content">
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="name" label="姓名" align="center" />
-        <el-table-column prop="number" label="员工编号" align="center" />
-        <el-table-column prop="dept" label="所在部门" align="center" />
+        <el-table-column prop="code" label="员工编号" align="center" />
+        <el-table-column prop="department_name" label="所在部门" align="center" />
         <el-table-column prop="is_admin" label="是否管理员" align="center">
           <template slot-scope="scope"><div>{{ scope.row.is_admin ? '是' : '否' }}</div></template>
         </el-table-column>
@@ -33,7 +33,7 @@
         <el-table-column prop="action" label="操作" align="center">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-            <el-button size="mini" @click="handleBlockUp(scope.$index, scope.row)">停用</el-button>
+            <el-button size="mini" @click="handleBlockUp(scope.$index, scope.row)">{{ scope.row.status ? '停用' : '启用' }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -41,18 +41,17 @@
         <el-pagination background :page-sizes="[5, 8, 10]" :page-size="12" layout="total, prev, pager, next, sizes, jumper" :total="total" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </div>
-    <el-dialog title="新增人员" :visible.sync="dialogFormVisible" width="30%">
+    <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增人员' : '编辑人员'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
       <el-form ref="addtionForm" :model="addtionForm" style="padding-right: 40px;">
         <el-form-item label="姓名" label-width="100px">
           <el-input v-model="addtionForm.name" placeholder="请输入员工姓名" />
         </el-form-item>
         <el-form-item label="员工编号" label-width="100px">
-          <el-input v-model="addtionForm.number" placeholder="请输入员工编号" />
+          <el-input v-model="addtionForm.code" placeholder="请输入员工编号" />
         </el-form-item>
         <el-form-item label="所属部门" label-width="100px">
-          <el-select v-model="addtionForm.preDpt" placeholder="请选择" style="width: 100%;">
-            <el-option label="区域一" value="shanghai" />
-            <el-option label="区域二" value="beijing" />
+          <el-select v-model="addtionForm.department_id" placeholder="请选择" style="width: 100%;" @change="handleSelectChange">
+            <el-option v-for="(item, index) in departmentList" :key="index" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="联系电话" label-width="100px">
@@ -60,7 +59,7 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button @click="handleAddCancel">取 消</el-button>
         <el-button type="primary" @click="handleAddConfirm">确 定</el-button>
       </div>
     </el-dialog>
@@ -74,13 +73,18 @@ export default {
   components: {},
   data: function() {
     return {
+      departmentList: [],
       addtionForm: {
-        preDpt: '',
+        department_id: '',
         name: '',
-        number: '',
+        code: '',
         telephone: ''
       },
-      dialogFormVisible: false,
+      dialogConfig: {
+        dialogFormVisible: false,
+        currentStatus: '' // 当前的状态，编辑（edit）或者是新增（add）
+      },
+      currentIndex: -1, // 记录当前状态下操作的目标数据的索引
       conditionForm: {
         statusList: [{
           label: '-1',
@@ -97,7 +101,7 @@ export default {
       },
       tableData: [],
       pageIndex: 1,
-      pageSize: 10,
+      pageSize: 5,
       total: 0
     }
   },
@@ -117,12 +121,15 @@ export default {
     })
   },
   methods: {
+    handleSelectChange(val) {
+      console.log('staff.vue methods handleSelectChange', val)
+    },
     handleRadioGroupChange(val) {
-      console.log('enterprise.vue methods handleRadioGroupChange', val)
+      console.log('staff.vue methods handleRadioGroupChange', val)
       const dataTemp = {
         name: this.conditionForm.name,
         status: val === '-1' ? '' : val,
-        pageIndex: this.pageIndex,
+        pageIndex: 1,
         pageSize: this.pageSize
       }
       fetchStaffList(dataTemp).then(res => {
@@ -146,16 +153,29 @@ export default {
         })
       })
     },
-    handleAddConfirm() {
-      const dataTemp = {
-        name: this.addtionForm.name,
-        telephone: this.addtionForm.telephone
+    handleAddCancel() {
+      this.addtionForm = {
+        department_id: '',
+        name: '',
+        code: '',
+        telephone: ''
       }
-      addStaff(dataTemp).then(res => {
+      this.dialogConfig.currentStatus = ''
+      this.currentIndex = -1
+      this.dialogConfig.dialogFormVisible = false
+    },
+    handleAddConfirm() {
+      if (this.dialogConfig.currentStatus === 'edit') {
+        this.addtionForm.department_name = this.departmentList.find(item => item.id === this.addtionForm.department_id).name
+      }
+      addStaff(this.addtionForm).then(res => {
         console.log('staff.vue mounted addStaff success', res)
-        this.$refs['addtionForm'].resetFields()
-        this.refreshView()
-        this.dialogFormVisible = false
+        if (this.dialogConfig.currentStatus === 'edit') {
+          this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], this.addtionForm))
+        } else {
+          this.refreshView()
+        }
+        this.handleAddCancel()
         Message({
           message: res.message,
           type: 'success',
@@ -163,7 +183,6 @@ export default {
         })
       }).catch(err => {
         console.log('staff.vue mounted addStaff failure', err)
-        this.dialogFormVisible = false
         Message({
           message: '操作失败',
           type: 'warning',
@@ -172,13 +191,15 @@ export default {
       })
     },
     handleAddtionClick() {
-      this.dialogFormVisible = true
+      this.dialogConfig.dialogFormVisible = true
       const dataTemp = {
         pageIndex: 1,
         pageSize: 1000
       }
       fetchDepartmentList(dataTemp).then(res => {
         console.log('staff.vue mounted fetchDepartmentList success', res)
+        this.departmentList.length = 0
+        this.departmentList.push(...res.data.data)
       }).catch(err => {
         console.log('staff.vue mounted fetchDepartmentList failure', err)
       })
@@ -188,7 +209,7 @@ export default {
       const dataTemp = {
         name: this.conditionForm.name,
         status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
-        pageIndex: this.pageIndex,
+        pageIndex: 1,
         pageSize: this.pageSize
       }
       fetchStaffList(dataTemp).then(res => {
@@ -200,11 +221,52 @@ export default {
         console.log('staff.vue mounted fetchStaffList failure', err)
       })
     },
-    handleEdit() {
-      console.log('staff.vue methods handleEdit')
+    handleEdit(index, row) {
+      console.log('staff.vue methods handleEdit', index, row)
+      this.addtionForm = {
+        id: row.id,
+        department_id: row.department_id,
+        name: row.name,
+        code: row.code,
+        telephone: row.telephone
+      }
+      this.dialogConfig.currentStatus = 'edit'
+      this.currentIndex = index
+      this.dialogConfig.dialogFormVisible = true
+      const dataTemp = {
+        pageIndex: 1,
+        pageSize: 1000
+      }
+      fetchDepartmentList(dataTemp).then(res => {
+        console.log('staff.vue mounted fetchDepartmentList success', res)
+        this.departmentList.length = 0
+        this.departmentList.push(...res.data.data)
+      }).catch(err => {
+        console.log('staff.vue mounted fetchDepartmentList failure', err)
+      })
     },
-    handleBlockUp() {
+    handleBlockUp(index, row) {
       console.log('staff.vue methods handleBlockUp')
+      const dataTemp = {
+        id: row.id,
+        status: row.status === 0 ? 1 : 0
+      }
+      addStaff(dataTemp).then(res => {
+        console.log('staff.vue handleBlockUp addStaff success', res)
+        row.status = dataTemp.status
+        Message({
+          message: res.message,
+          type: 'success',
+          duration: 5 * 1000
+        })
+      }).catch(err => {
+        console.log('staff.vue handleBlockUp addStaff failure', err)
+        Message({
+          message: '操作失败',
+          type: 'warning',
+          duration: 5 * 1000
+        })
+      })
     },
     handleSizeChange(val) {
       console.log('staff.vue methods handleSizeChange', val, this.pageIndex)
