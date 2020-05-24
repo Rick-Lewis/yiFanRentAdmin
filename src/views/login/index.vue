@@ -68,6 +68,7 @@
 <script>
 // import { validUsername } from '@/utils/validate'
 import SocialSign from './components/SocialSignin'
+import { Message } from 'element-ui'
 
 export default {
   name: 'Login',
@@ -149,11 +150,21 @@ export default {
         if (valid) {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+            .then((res) => {
+              console.log(res)
+              if (res.code === 1) {
+                Message({
+                  message: res.message || 'Error',
+                  type: 'error',
+                  duration: 5 * 1000
+                })
+              } else {
+                this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+              }
               this.loading = false
             })
-            .catch(() => {
+            .catch((err) => {
+              console.log(err)
               this.loading = false
             })
         } else {

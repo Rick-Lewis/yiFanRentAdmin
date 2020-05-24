@@ -34,10 +34,12 @@ const actions = {
   login({ commit }, userInfo) {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(() => {
-        commit('SET_TOKEN', roleAuth.tokens.admin.token)
-        setToken(roleAuth.tokens.admin.token)
-        resolve()
+      login({ username: username.trim(), password: password }).then(res => {
+        if (res.code !== 1) {
+          commit('SET_TOKEN', roleAuth.tokens.admin.token)
+          setToken(roleAuth.tokens.admin.token)
+        }
+        resolve(res)
       }).catch(error => {
         reject(error)
       })

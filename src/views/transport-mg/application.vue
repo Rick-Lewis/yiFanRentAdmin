@@ -20,7 +20,7 @@
         </div>
       </el-form>
     </div>
-    <div style="margin-top: 10px;"><el-button type="primary" @click="onSubmit">+用车申请</el-button></div>
+    <div style="margin-top: 10px;"><el-button type="primary" @click="handleAppAddition">+用车申请</el-button></div>
     <div class="content">
       <div class="card-container">
         <div class="card-header">审批编号：Z2003151420140001</div>
@@ -105,6 +105,10 @@ export default {
   created() {},
   mounted() {},
   methods: {
+    handleAppAddition() {
+      console.log('application.vue methods handleAppAddition')
+      this.$router.push({ path: '/transport-mg/application-filled' })
+    },
     onSubmit() {
       console.log('application.vue methods onSubmit')
     },

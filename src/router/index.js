@@ -152,6 +152,16 @@ export const asyncRoutes = [
         }
       },
       {
+        path: 'application-filled',
+        component: () => import('@/views/transport-mg/application-filled'),
+        name: 'ApplicationFilled',
+        hidden: true,
+        meta: {
+          title: '填写申请',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
+      },
+      {
         path: 'examine',
         component: () => import('@/views/transport-mg/examine'),
         name: 'Examine',
