@@ -1,5 +1,13 @@
 import request from '@/utils/request'
 
+// 用车申请
+export function fetchApplicationList(data) {
+  return request({
+    url: '/officialcars/application/page',
+    method: 'get',
+    params: data
+  })
+}
 // 人员管理
 export function fetchStaffList(data) {
   return request({

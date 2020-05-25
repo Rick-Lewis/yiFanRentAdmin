@@ -9,12 +9,12 @@
         </el-form-item>
         <div class="other-container">
           <el-form-item label="用车事由">
-            <el-input v-model="conditionForm.name" placeholder="请输入关键字搜索" />
+            <el-input v-model="conditionForm.reason" placeholder="请输入关键字搜索" />
           </el-form-item>
           <el-form-item label="随车人员">
-            <el-select v-model="form.member" multiple placeholder="请选择" style="width: 100%;">
+            <el-select v-model="conditionForm.member" multiple placeholder="请选择" style="width: 100%;">
               <el-option
-                v-for="item in options"
+                v-for="item in conditionForm.options"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
@@ -56,22 +56,41 @@ export default {
   components: {},
   data: function() {
     return {
-      options: [{
-        value: '选项1',
-        label: '黄金糕'
-      }, {
-        value: '选项2',
-        label: '双皮奶'
-      }, {
-        value: '选项3',
-        label: '蚵仔煎'
-      }, {
-        value: '选项4',
-        label: '龙须面'
-      }, {
-        value: '选项5',
-        label: '北京烤鸭'
-      }],
+      conditionForm: {
+        statusList: [{
+          label: '-1',
+          value: '全部'
+        }, {
+          label: '0',
+          value: '待审批'
+        }, {
+          label: '1',
+          value: '审批中'
+        }, {
+          label: '2',
+          value: '审批通过'
+        }],
+        status: '-1',
+        reason: '',
+        options: [{
+          value: '选项1',
+          label: '黄金糕'
+        }, {
+          value: '选项2',
+          label: '双皮奶'
+        }, {
+          value: '选项3',
+          label: '蚵仔煎'
+        }, {
+          value: '选项4',
+          label: '龙须面'
+        }, {
+          value: '选项5',
+          label: '北京烤鸭'
+        }],
+        member: ''
+      },
+      tableData: [],
       pageIndex: 0,
       pageSize: 5,
       total: 0
@@ -81,10 +100,60 @@ export default {
   created() {},
   mounted() {},
   methods: {
+    onSearch() {},
+    handleRadioGroupChange(val) {
+      console.log('enterprise.vue methods handleRadioGroupChange', val)
+      // const dataTemp = {
+      //   name: this.conditionForm.name,
+      //   status: val === '-1' ? '' : val,
+      //   pageIndex: 1,
+      //   pageSize: this.pageSize
+      // }
+      // fetchEnterpriseList(dataTemp).then(res => {
+      //   console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+      //   this.tableData.length = 0
+      //   this.tableData.push(...res.data.data)
+      //   this.total = res.data.total
+      // }).catch(err => {
+      //   console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
+      // })
+    },
     handleAudit(index, row) {},
     handleSizeChange() {},
     handleCurrentChange() {}
   }
 }
 </script>
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.examine-container{
+  min-height: calc(100vh - 84px);
+  background-color: #eef0f3;
+  padding: 16px;
+  .header{
+    background-color: #ffffff;
+    padding-top: 22px;
+    padding-left: 22px;
+    .other-container{
+      display: flex;
+      .el-form-item:not(:first-child){
+        margin-left: 40px;
+      }
+      .el-form-item:last-child{
+        margin-left: 0;
+      }
+    }
+  }
+  .content{
+    background-color: #ffffff;
+    margin-top: 10px;
+    padding: 16px;
+    .pagination-cocntainer{
+      text-align: right;
+      margin-top: 16px;
+      & > div{
+        padding: 0;
+      }
+    }
+  }
+}
+</style>
