@@ -85,7 +85,7 @@
   </div>
 </template>
 <script>
-import { fetchApplicationList } from '@/api/org-mg'
+import { fetchApplicationList, fetchStaffList } from '@/api/org-mg'
 // import { Message } from 'element-ui'
 export default {
   name: 'Application',
@@ -112,22 +112,7 @@ export default {
         }],
         status: '-1',
         reason: '',
-        options: [{
-          value: '选项1',
-          label: '黄金糕'
-        }, {
-          value: '选项2',
-          label: '双皮奶'
-        }, {
-          value: '选项3',
-          label: '蚵仔煎'
-        }, {
-          value: '选项4',
-          label: '龙须面'
-        }, {
-          value: '选项5',
-          label: '北京烤鸭'
-        }],
+        options: [],
         member: ''
       },
       tableData: [],
@@ -139,21 +124,34 @@ export default {
   computed: {},
   created() {},
   mounted() {
-    const dataTemp = {
+    let dataTemp = {
+      pageIndex: 1,
+      pageSize: 1000
+    }
+    fetchStaffList(dataTemp).then(res => {
+      console.log('application.vue mounted fetchStaffList success', res)
+      this.conditionForm.options.push(...res.data.data.map(item => ({
+        value: item.id,
+        label: item.name
+      })))
+    }).catch(err => {
+      console.log('application.vue mounted fetchStaffList failure', err)
+    })
+    dataTemp = {
       pageIndex: this.pageIndex,
       pageSize: this.pageSize
     }
     fetchApplicationList(dataTemp).then(res => {
-      console.log('staff.vue mounted fetchStaffList success', res)
+      console.log('application.vue mounted fetchStaffList success', res)
       this.tableData.push(...res.data.data)
       this.total = res.data.total
     }).catch(err => {
-      console.log('staff.vue mounted fetchStaffList failure', err)
+      console.log('application.vue mounted fetchStaffList failure', err)
     })
   },
   methods: {
     handleRadioGroupChange(val) {
-      console.log('enterprise.vue methods handleRadioGroupChange', val)
+      console.log('application.vue methods handleRadioGroupChange', val)
       const dataTemp = {
         reason: this.conditionForm.reason,
         member: this.conditionForm.member,
@@ -162,12 +160,12 @@ export default {
         pageSize: this.pageSize
       }
       fetchApplicationList(dataTemp).then(res => {
-        console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+        console.log('application.vue methods fetchEnterpriseList success', res)
         this.tableData.length = 0
         this.tableData.push(...res.data.data)
         this.total = res.data.total
       }).catch(err => {
-        console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
+        console.log('application.vue methods fetchEnterpriseList failure', err)
       })
     },
     handleAppAddition() {
@@ -176,6 +174,21 @@ export default {
     },
     onSubmit() {
       console.log('application.vue methods onSubmit')
+      const dataTemp = {
+        reason: this.conditionForm.reason,
+        member: this.conditionForm.member,
+        status: this.status === '-1' ? '' : this.status,
+        pageIndex: 1,
+        pageSize: this.pageSize
+      }
+      fetchApplicationList(dataTemp).then(res => {
+        console.log('application.vue methods onSubmit fetchApplicationList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('application.vue methods onSubmit fetchApplicationList failure', err)
+      })
     },
     handleProcessClick() {
       if (this.activeNames.length > 0) {

@@ -57,31 +57,17 @@
   </div>
 </template>
 <script>
+import { fetchStaffList, addApplication } from '@/api/org-mg'
 export default {
   name: 'ApplicationFilled',
   data: function() {
     return {
-      options: [{
-        value: '选项1',
-        label: '黄金糕'
-      }, {
-        value: '选项2',
-        label: '双皮奶'
-      }, {
-        value: '选项3',
-        label: '蚵仔煎'
-      }, {
-        value: '选项4',
-        label: '龙须面'
-      }, {
-        value: '选项5',
-        label: '北京烤鸭'
-      }],
       form: {
         applicant_name: '',
         applicant_tel: '',
         reason: '',
         duration: [],
+        options: [],
         member: [],
         lines: '',
         with_driver: 0,
@@ -91,10 +77,29 @@ export default {
   },
   computed: {},
   created() {},
-  mounted() {},
+  mounted() {
+    const dataTemp = {
+      pageIndex: 1,
+      pageSize: 1000
+    }
+    fetchStaffList(dataTemp).then(res => {
+      console.log('staff.vue mounted fetchStaffList success', res)
+      this.form.options.push(...res.data.data.map(item => ({
+        value: item.id,
+        label: item.name
+      })))
+    }).catch(err => {
+      console.log('staff.vue mounted fetchStaffList failure', err)
+    })
+  },
   methods: {
     onSubmit() {
       console.log('application-filled.vue methods onSubmit')
+      addApplication(this.form).then(res => {
+        console.log('staff.vue methods onSubmit addApplication success', res)
+      }).catch(err => {
+        console.log('staff.vue methods onSubmit addApplication failure', err)
+      })
     }
   }
 }

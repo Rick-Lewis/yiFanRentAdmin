@@ -8,6 +8,13 @@ export function fetchApplicationList(data) {
     params: data
   })
 }
+export function addApplication(data) {
+  return request({
+    url: '/officialcars/application/save',
+    method: 'post',
+    data
+  })
+}
 // 人员管理
 export function fetchStaffList(data) {
   return request({
