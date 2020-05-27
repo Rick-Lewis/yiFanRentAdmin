@@ -23,12 +23,13 @@
               range-separator="至"
               start-placeholder="开始日期"
               end-placeholder="结束日期"
+              value-format="yyyy-MM-dd hh:mm:ss"
             />
           </el-form-item>
           <el-form-item label="随车人员">
             <el-select v-model="form.member" multiple placeholder="请选择" style="width: 100%;">
               <el-option
-                v-for="item in options"
+                v-for="item in form.options"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
@@ -49,7 +50,7 @@
           </el-form-item>
           <el-form-item style="padding-bottom: 16px;">
             <el-button type="primary" @click="onSubmit">提交</el-button>
-            <el-button>取消</el-button>
+            <el-button @click="back">取消</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -58,6 +59,7 @@
 </template>
 <script>
 import { fetchStaffList, addApplication } from '@/api/org-mg'
+import { Message } from 'element-ui'
 export default {
   name: 'ApplicationFilled',
   data: function() {
@@ -93,10 +95,40 @@ export default {
     })
   },
   methods: {
+    refreshView() {
+      // In order to make the cached page re-rendered
+      this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
+
+      const { fullPath } = this.$route
+
+      this.$nextTick(() => {
+        this.$router.replace({
+          path: '/redirect' + fullPath
+        })
+      })
+    },
+    back() {
+      if (this.$route.query.noGoBack) {
+        this.$router.push({ path: '/dashboard' })
+      } else {
+        this.$router.go(-1)
+      }
+    },
     onSubmit() {
       console.log('application-filled.vue methods onSubmit')
-      addApplication(this.form).then(res => {
+      const tempData = Object.assign({}, this.form, {
+        member: this.form.member.join(','),
+        time_start: this.form.duration[0],
+        time_end: this.form.duration[1]
+      })
+      addApplication(tempData).then(res => {
         console.log('staff.vue methods onSubmit addApplication success', res)
+        Message({
+          message: res.message,
+          type: 'success',
+          duration: 5 * 1000
+        })
+        this.refreshView()
       }).catch(err => {
         console.log('staff.vue methods onSubmit addApplication failure', err)
       })
