@@ -27,12 +27,12 @@
             />
           </el-form-item>
           <el-form-item label="随车人员">
-            <el-select v-model="form.member" multiple placeholder="请选择" style="width: 100%;">
+            <el-select v-model="form.member" multiple placeholder="请选择" style="width: 100%;" @change="handleSelectChange" @remove-tag="hanldeSelectRemove">
               <el-option
                 v-for="item in form.options"
                 :key="item.value"
                 :label="item.label"
-                :value="item.value"
+                :value="item"
               />
             </el-select>
           </el-form-item>
@@ -58,7 +58,7 @@
   </div>
 </template>
 <script>
-import { fetchStaffList, addApplication } from '@/api/org-mg'
+import { fetchStaffList, addApplication, fetchApplicationDetail } from '@/api/org-mg'
 import { Message } from 'element-ui'
 export default {
   name: 'ApplicationFilled',
@@ -93,14 +93,25 @@ export default {
     }).catch(err => {
       console.log('staff.vue mounted fetchStaffList failure', err)
     })
+    if (this.$route.query.action === 'edit') {
+      fetchApplicationDetail({ id: this.$route.query.id }).then(res => {
+        console.log('staff.vue mounted fetchApplicationDetail success', res)
+      }).catch(err => {
+        console.log('staff.vue mounted fetchApplicationDetail failure', err)
+      })
+    }
   },
   methods: {
+    hanldeSelectRemove(item) {
+      console.log(item)
+    },
+    handleSelectChange(item) {
+      console.log(item)
+    },
     refreshView() {
       // In order to make the cached page re-rendered
       this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
-
       const { fullPath } = this.$route
-
       this.$nextTick(() => {
         this.$router.replace({
           path: '/redirect' + fullPath
@@ -115,9 +126,10 @@ export default {
       }
     },
     onSubmit() {
-      console.log('application-filled.vue methods onSubmit')
+      console.log('application-filled.vue methods onSubmit', this.form)
       const tempData = Object.assign({}, this.form, {
-        member: this.form.member.join(','),
+        member: this.form.member.map(item => item.value).join(','),
+        member_name: this.form.member.map(item => item.label).join(','),
         time_start: this.form.duration[0],
         time_end: this.form.duration[1]
       })

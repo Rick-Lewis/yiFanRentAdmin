@@ -8,11 +8,23 @@ export function fetchApplicationList(data) {
     params: data
   })
 }
+export function applicationCancel(data) {
+  return request({
+    url: `/officialcars/application/cancel/${data.id}`,
+    method: 'post'
+  })
+}
 export function addApplication(data) {
   return request({
     url: '/officialcars/application/save',
     method: 'post',
     data
+  })
+}
+export function fetchApplicationDetail(data) {
+  return request({
+    url: `/officialcars/application/${data.id}`,
+    method: 'get'
   })
 }
 // 人员管理

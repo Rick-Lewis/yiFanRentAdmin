@@ -17,7 +17,7 @@
                 v-for="item in conditionForm.options"
                 :key="item.value"
                 :label="item.label"
-                :value="item.value"
+                :value="item"
               />
             </el-select>
           </el-form-item>
@@ -48,15 +48,16 @@
             <div>
               <div>
                 <span>随车人员：</span>
-                <el-tag v-for="(ite, i) in item.member.split(',')" :key="i" size="small">{{ ite }}</el-tag>
+                <el-tag v-for="(ite, i) in (item.member_name && item.member_name.split(','))" :key="i" size="small">{{ ite }}</el-tag>
               </div>
-              <div style="margin-top: 16px;">司机：{{ item.with_driver === 0 ? '自备' : '' }}</div>
+              <div style="margin-top: 16px;">司机：{{ item.with_driver === 0 ? '自备' : '准备中' }}</div>
             </div>
             <el-divider direction="vertical" />
             <div>待审批</div>
             <el-divider direction="vertical" />
             <div style="padding-right: 100px;">
-              <div><el-link type="primary">撤销</el-link></div>
+              <div><el-link type="primary" @click="handleCancelClick(item)">撤销</el-link></div>
+              <div><el-link type="primary" @click="handleEditClick(item)">编辑</el-link></div>
               <div style="margin-top: 16px;" @click="handleProcessClick(item)"><el-link type="primary">进度</el-link></div>
             </div>
           </div>
@@ -81,7 +82,7 @@
   </div>
 </template>
 <script>
-import { fetchApplicationList, fetchStaffList } from '@/api/org-mg'
+import { fetchApplicationList, fetchStaffList, applicationCancel } from '@/api/org-mg'
 // import { Message } from 'element-ui'
 export default {
   name: 'Application',
@@ -148,11 +149,27 @@ export default {
     })
   },
   methods: {
+    handleEditClick(item) {
+      this.$router.push({ path: '/transport-mg/application-filled', query: { action: 'edit', id: item.id }})
+    },
+    handleCancelClick(item) {
+      const dataTemp = {
+        id: item.id
+      }
+      this.$confirm('确定撤销吗？').then(_ => {
+        applicationCancel(dataTemp).then(res => {
+          console.log('application.vue methods applicationCancel success', res)
+        }).catch(err => {
+          console.log('application.vue methods applicationCancel failure', err)
+        })
+      }).catch(_ => {})
+    },
     handleRadioGroupChange(val) {
       console.log('application.vue methods handleRadioGroupChange', val)
+      this.status = val
       const dataTemp = {
         reason: this.conditionForm.reason,
-        member: this.conditionForm.member,
+        member_name: this.conditionForm.member.map(item => item.label).join(','),
         status: val === '-1' ? '' : val,
         pageIndex: 1,
         pageSize: this.pageSize
@@ -174,7 +191,7 @@ export default {
       console.log('application.vue methods onSubmit')
       const dataTemp = {
         reason: this.conditionForm.reason,
-        member: this.conditionForm.member,
+        member_name: this.conditionForm.member.map(item => item.label).join(','),
         status: this.status === '-1' ? '' : this.status,
         pageIndex: 1,
         pageSize: this.pageSize
@@ -280,6 +297,7 @@ export default {
       display: flex;
       justify-content: center;
       align-items: center;
+      background-color: #ffffff;
       .el-table__empty-text {
         line-height: 60px;
         width: 50%;
