@@ -31,8 +31,8 @@
         <el-table-column prop="action" label="操作" align="center" width="300px">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-            <el-button size="mini" @click="handleBlockUp(scope.$index, scope.row)">{{ scope.row.status ? '停用' : '启用' }}</el-button>
-            <el-button slot="reference" size="mini" @click="handleResetPassword(scope.$index, scope.row)">重置管理员密码</el-button>
+            <el-button size="mini" @click="handleStatusChange(scope.$index, scope.row)">{{ scope.row.status ? '停用' : '启用' }}</el-button>
+            <el-button slot="reference" size="mini" @click="handleResetPassword(scope.$index, scope.row)">重置密码</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -41,30 +41,30 @@
       </div>
     </div>
     <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增企业' : '编辑企业'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
-      <el-form :model="addtionForm" style="padding-right: 40px;">
-        <el-form-item label="单位名称" label-width="110px">
-          <el-input v-model="addtionForm.name" placeholder="请输入单位名称" />
+      <el-form ref="additionForm" :model="additionForm" :rules="additionFormRules" style="padding-right: 40px;">
+        <el-form-item label="单位名称" label-width="120px" prop="name">
+          <el-input v-model="additionForm.name" placeholder="请输入单位名称" />
         </el-form-item>
-        <el-form-item label="单位编号" label-width="110px">
-          <el-input v-model="addtionForm.note" placeholder="请输入单位编号" />
+        <el-form-item label="单位编号" label-width="120px" prop="note">
+          <el-input v-model="additionForm.note" placeholder="请输入单位编号" />
         </el-form-item>
-        <el-form-item label="管理员" label-width="110px">
-          <el-input v-model="addtionForm.user.name" placeholder="请输入管理员姓名" />
+        <el-form-item label="管理员" label-width="120px" prop="user.name">
+          <el-input v-model="additionForm.user.name" placeholder="请输入管理员姓名" />
         </el-form-item>
-        <el-form-item label="管理员账号" label-width="110px">
-          <el-input v-model="addtionForm.user.username" placeholder="请输入账号" />
+        <el-form-item label="管理员账号" label-width="120px" prop="user.username">
+          <el-input v-model="additionForm.user.username" placeholder="请输入管理员账号" />
         </el-form-item>
-        <el-form-item v-if="dialogConfig.currentStatus === 'add' ? true : false" label="密码" label-width="110px">
-          <el-input v-model="addtionForm.user.password" placeholder="请输入密码" />
+        <el-form-item v-if="dialogConfig.currentStatus === 'add' ? true : false" label="密码" label-width="120px" prop="user.password">
+          <el-input v-model="additionForm.user.password" placeholder="请输入密码" />
         </el-form-item>
-        <el-form-item label="管理员联系方式" label-width="110px">
-          <el-input v-model="addtionForm.user.telephone" placeholder="请输入管理员手机号" />
+        <el-form-item label="管理员联系方式" label-width="120px" prop="user.telephone">
+          <el-input v-model="additionForm.user.telephone" placeholder="请输入管理员手机号" />
         </el-form-item>
-        <el-form-item label="发票抬头" label-width="110px">
-          <el-input v-model="addtionForm.invoice_title" placeholder="请输入发票抬头" />
+        <el-form-item label="发票抬头" label-width="120px" prop="invoice_title">
+          <el-input v-model="additionForm.invoice_title" placeholder="请输入发票抬头" />
         </el-form-item>
-        <el-form-item label="税号" label-width="110px">
-          <el-input v-model="addtionForm.tax_no" placeholder="请输入税号" />
+        <el-form-item label="税号" label-width="120px" prop="tax_no">
+          <el-input v-model="additionForm.tax_no" placeholder="请输入税号" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -91,6 +91,18 @@
         <el-button type="primary" @click="resetPasswordConfirm">确 定</el-button>
       </span>
     </el-dialog>
+    <el-dialog
+      title="提示"
+      :visible.sync="confirmDialog.dialogFormVisible"
+      width="25%"
+      center
+    >
+      <div style="text-align: center">确定要{{ tableData[currentIndex] && tableData[currentIndex].status ? '停用' : '启用' }}{{ tableData[currentIndex] && tableData[currentIndex].name }}</div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="handleBlockUpCancel">取 消</el-button>
+        <el-button type="primary" @click="handleBlockUp">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -101,6 +113,9 @@ export default {
   components: {},
   data: function() {
     return {
+      confirmDialog: {
+        dialogFormVisible: false
+      },
       resetForm: {
         password: '',
         confirmPassword: ''
@@ -108,7 +123,7 @@ export default {
       resetDialog: {
         dialogFormVisible: false
       },
-      addtionForm: {
+      additionForm: {
         name: '',
         note: '',
         invoice_title: '',
@@ -118,6 +133,18 @@ export default {
           username: '',
           telephone: '',
           password: ''
+        }
+      },
+      additionFormRules: {
+        name: [{ required: true, message: '请输入单位名称', trigger: ['blur'] }],
+        note: [{ required: true, message: '请输入单位编号', trigger: ['blur'] }],
+        invoice_title: [{ required: true, message: '请输入发票抬头', trigger: ['blur'] }],
+        tax_no: [{ required: true, message: '请输入税号', trigger: ['blur'] }],
+        user: {
+          name: [{ required: true, message: '请输入管理员姓名', trigger: ['blur'] }],
+          username: [{ required: true, message: '请输入管理员账号', trigger: ['blur'] }],
+          telephone: [{ required: true, message: '请输入管理员手机号', trigger: ['blur'] }],
+          password: [{ required: true, message: '请输入密码', trigger: ['blur'] }]
         }
       },
       dialogConfig: {
@@ -161,6 +188,15 @@ export default {
     })
   },
   methods: {
+    handleBlockUpCancel() {
+      this.currentIndex = -1
+      this.confirmDialog.dialogFormVisible = false
+    },
+    handleStatusChange(index, row) {
+      console.log('enterprise.vue methods handleStatusChange', index, row)
+      this.currentIndex = index
+      this.confirmDialog.dialogFormVisible = true
+    },
     handleResetPassword(index, row) {
       console.log('enterprise.vue methods handleResetPassword', index, row)
       this.currentIndex = index
@@ -238,7 +274,7 @@ export default {
       })
     },
     handleAddCancel() {
-      this.addtionForm = {
+      this.additionForm = {
         name: '',
         note: '',
         invoice_title: '',
@@ -250,31 +286,39 @@ export default {
           password: ''
         }
       }
+      this.$refs['additionForm'].clearValidate()
       this.dialogConfig.currentStatus = ''
       this.currentIndex = -1
       this.dialogConfig.dialogFormVisible = false
     },
     handleAddConfirm() {
-      addEnterprise(this.addtionForm).then(res => {
-        console.log('enterprise.vue mounted addEnterprise success', res)
-        if (this.dialogConfig.currentStatus === 'edit') {
-          this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], this.addtionForm))
+      this.$refs['additionForm'].validate((valid) => {
+        if (valid) {
+          addEnterprise(this.additionForm).then(res => {
+            console.log('enterprise.vue mounted addEnterprise success', res)
+            if (this.dialogConfig.currentStatus === 'edit') {
+              this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], this.additionForm))
+            } else {
+              this.refreshView()
+            }
+            this.handleAddCancel()
+            Message({
+              message: res.message,
+              type: 'success',
+              duration: 5 * 1000
+            })
+          }).catch(err => {
+            console.log('enterprise.vue mounted addEnterprise failure', err)
+            Message({
+              message: '操作失败',
+              type: 'warning',
+              duration: 5 * 1000
+            })
+          })
+          return true
         } else {
-          this.refreshView()
+          return false
         }
-        this.handleAddCancel()
-        Message({
-          message: res.message,
-          type: 'success',
-          duration: 5 * 1000
-        })
-      }).catch(err => {
-        console.log('enterprise.vue mounted addEnterprise failure', err)
-        Message({
-          message: '操作失败',
-          type: 'warning',
-          duration: 5 * 1000
-        })
       })
     },
     handleAddtionClick() {
@@ -300,7 +344,7 @@ export default {
     },
     handleEdit(index, row) {
       console.log('enterprise.vue methods handleEdit', index, row)
-      this.addtionForm = {
+      this.additionForm = {
         id: row.id,
         name: row.name,
         note: row.note,
@@ -316,15 +360,16 @@ export default {
       this.currentIndex = index
       this.dialogConfig.dialogFormVisible = true
     },
-    handleBlockUp(index, row) {
+    handleBlockUp() {
       console.log('enterprise.vue methods handleBlockUp')
       const dataTemp = {
-        id: row.id,
-        status: row.status === 0 ? 1 : 0
+        id: this.tableData[this.currentIndex].id,
+        status: this.tableData[this.currentIndex].status === 0 ? 1 : 0
       }
       addEnterprise(dataTemp).then(res => {
         console.log('enterprise.vue handleBlockUp addEnterprise success', res)
-        row.status = dataTemp.status
+        this.tableData[this.currentIndex].status = dataTemp.status
+        this.handleBlockUpCancel()
         Message({
           message: res.message,
           type: 'success',

@@ -10,7 +10,14 @@
       <div class="main">
         <el-form ref="form" :model="form" label-width="100px">
           <div>
-            <el-form-item label="申请人"><el-input v-model="form.applicant_name" placeholder="请输入申请人姓名" /></el-form-item>
+            <el-form-item label="申请人"><el-select v-model="form.applicant" placeholder="请选择" style="width: 100%;">
+              <el-option
+                v-for="item in form.options"
+                :key="item.value"
+                :label="item.label"
+                :value="item"
+              />
+            </el-select></el-form-item>
             <el-form-item label="申请人电话"><el-input v-model="form.applicant_tel" placeholder="请输入申请人电话" /></el-form-item>
           </div>
           <el-form-item label="用车事由">
@@ -27,7 +34,7 @@
             />
           </el-form-item>
           <el-form-item label="随车人员">
-            <el-select v-model="form.member" multiple placeholder="请选择" style="width: 100%;" @change="handleSelectChange" @remove-tag="hanldeSelectRemove">
+            <el-select v-model="form.member" multiple placeholder="请选择" style="width: 100%;">
               <el-option
                 v-for="item in form.options"
                 :key="item.value"
@@ -65,7 +72,7 @@ export default {
   data: function() {
     return {
       form: {
-        applicant_name: '',
+        applicant: '',
         applicant_tel: '',
         reason: '',
         duration: [],
@@ -102,12 +109,6 @@ export default {
     }
   },
   methods: {
-    hanldeSelectRemove(item) {
-      console.log(item)
-    },
-    handleSelectChange(item) {
-      console.log(item)
-    },
     refreshView() {
       // In order to make the cached page re-rendered
       this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
@@ -128,6 +129,7 @@ export default {
     onSubmit() {
       console.log('application-filled.vue methods onSubmit', this.form)
       const tempData = Object.assign({}, this.form, {
+        applicant_name: this.form.applicant.value,
         member: this.form.member.map(item => item.value).join(','),
         member_name: this.form.member.map(item => item.label).join(','),
         time_start: this.form.duration[0],

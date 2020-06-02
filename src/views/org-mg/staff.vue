@@ -33,7 +33,7 @@
         <el-table-column prop="action" label="操作" align="center">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-            <el-button size="mini" @click="handleBlockUp(scope.$index, scope.row)">{{ scope.row.status ? '停用' : '启用' }}</el-button>
+            <el-button size="mini" @click="handleStatusChange(scope.$index, scope.row)">{{ scope.row.status ? '停用' : '启用' }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -42,26 +42,38 @@
       </div>
     </div>
     <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增人员' : '编辑人员'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
-      <el-form ref="addtionForm" :model="addtionForm" style="padding-right: 40px;">
-        <el-form-item label="姓名" label-width="100px">
-          <el-input v-model="addtionForm.name" placeholder="请输入员工姓名" />
+      <el-form ref="additionForm" :model="additionForm" :rules="additionFormRules" style="padding-right: 40px;">
+        <el-form-item label="姓名" label-width="100px" prop="name">
+          <el-input v-model="additionForm.name" placeholder="请输入员工姓名" />
         </el-form-item>
-        <el-form-item label="员工编号" label-width="100px">
-          <el-input v-model="addtionForm.code" placeholder="请输入员工编号" />
+        <el-form-item label="员工编号" label-width="100px" prop="code">
+          <el-input v-model="additionForm.code" placeholder="请输入员工编号" />
         </el-form-item>
-        <el-form-item label="所属部门" label-width="100px">
-          <el-select v-model="addtionForm.department_id" placeholder="请选择" style="width: 100%;" @change="handleSelectChange">
+        <el-form-item label="所属部门" label-width="100px" prop="department_id">
+          <el-select v-model="additionForm.department_id" placeholder="请选择所属部门" style="width: 100%;" @change="handleSelectChange">
             <el-option v-for="(item, index) in departmentList" :key="index" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="联系电话" label-width="100px">
-          <el-input v-model="addtionForm.telephone" placeholder="请输入员工手机号" />
+        <el-form-item label="联系电话" label-width="100px" prop="telephone">
+          <el-input v-model="additionForm.telephone" placeholder="请输入员工手机号" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleAddCancel">取 消</el-button>
         <el-button type="primary" @click="handleAddConfirm">确 定</el-button>
       </div>
+    </el-dialog>
+    <el-dialog
+      title="提示"
+      :visible.sync="confirmDialog.dialogFormVisible"
+      width="25%"
+      center
+    >
+      <div style="text-align: center">确定要{{ tableData[currentIndex] && tableData[currentIndex].status ? '停用' : '启用' }}{{ tableData[currentIndex] && tableData[currentIndex].name }}</div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="handleBlockUpCancel">取 消</el-button>
+        <el-button type="primary" @click="handleBlockUp">确 定</el-button>
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -73,12 +85,21 @@ export default {
   components: {},
   data: function() {
     return {
+      confirmDialog: {
+        dialogFormVisible: false
+      },
       departmentList: [],
-      addtionForm: {
+      additionForm: {
         department_id: '',
         name: '',
         code: '',
         telephone: ''
+      },
+      additionFormRules: {
+        department_id: [{ required: true, message: '请选择所属部门', trigger: ['blur'] }],
+        name: [{ required: true, message: '请输入员工姓名', trigger: ['blur'] }],
+        code: [{ required: true, message: '请输入员工编号', trigger: ['blur'] }],
+        telephone: [{ required: true, message: '请输入员工手机号', trigger: ['blur'] }]
       },
       dialogConfig: {
         dialogFormVisible: false,
@@ -121,6 +142,16 @@ export default {
     })
   },
   methods: {
+    handleBlockUpCancel() {
+      console.log('enterprise.vue methods handleBlockUpCancel')
+      this.currentIndex = -1
+      this.confirmDialog.dialogFormVisible = false
+    },
+    handleStatusChange(index, row) {
+      console.log('enterprise.vue methods handleStatusChange', index, row)
+      this.currentIndex = index
+      this.confirmDialog.dialogFormVisible = true
+    },
     handleSelectChange(val) {
       console.log('staff.vue methods handleSelectChange', val)
     },
@@ -154,40 +185,48 @@ export default {
       })
     },
     handleAddCancel() {
-      this.addtionForm = {
+      this.additionForm = {
         department_id: '',
         name: '',
         code: '',
         telephone: ''
       }
+      this.$refs['additionForm'].clearValidate()
       this.dialogConfig.currentStatus = ''
       this.currentIndex = -1
       this.dialogConfig.dialogFormVisible = false
     },
     handleAddConfirm() {
-      if (this.dialogConfig.currentStatus === 'edit') {
-        this.addtionForm.department_name = this.departmentList.find(item => item.id === this.addtionForm.department_id).name
-      }
-      addStaff(this.addtionForm).then(res => {
-        console.log('staff.vue mounted addStaff success', res)
-        if (this.dialogConfig.currentStatus === 'edit') {
-          this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], this.addtionForm))
+      this.$refs['additionForm'].validate((valid) => {
+        if (valid) {
+          if (this.dialogConfig.currentStatus === 'edit') {
+            this.additionForm.department_name = this.departmentList.find(item => item.id === this.additionForm.department_id).name
+          }
+          addStaff(this.additionForm).then(res => {
+            console.log('staff.vue mounted addStaff success', res)
+            if (this.dialogConfig.currentStatus === 'edit') {
+              this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], this.additionForm))
+            } else {
+              this.refreshView()
+            }
+            this.handleAddCancel()
+            Message({
+              message: res.message,
+              type: 'success',
+              duration: 5 * 1000
+            })
+          }).catch(err => {
+            console.log('staff.vue mounted addStaff failure', err)
+            Message({
+              message: '操作失败',
+              type: 'warning',
+              duration: 5 * 1000
+            })
+          })
+          return true
         } else {
-          this.refreshView()
+          return false
         }
-        this.handleAddCancel()
-        Message({
-          message: res.message,
-          type: 'success',
-          duration: 5 * 1000
-        })
-      }).catch(err => {
-        console.log('staff.vue mounted addStaff failure', err)
-        Message({
-          message: '操作失败',
-          type: 'warning',
-          duration: 5 * 1000
-        })
       })
     },
     handleAddtionClick() {
@@ -223,7 +262,7 @@ export default {
     },
     handleEdit(index, row) {
       console.log('staff.vue methods handleEdit', index, row)
-      this.addtionForm = {
+      this.additionForm = {
         id: row.id,
         department_id: row.department_id,
         name: row.name,
@@ -248,12 +287,13 @@ export default {
     handleBlockUp(index, row) {
       console.log('staff.vue methods handleBlockUp')
       const dataTemp = {
-        id: row.id,
-        status: row.status === 0 ? 1 : 0
+        id: this.tableData[this.currentIndex].id,
+        status: this.tableData[this.currentIndex].status === 0 ? 1 : 0
       }
       addStaff(dataTemp).then(res => {
         console.log('staff.vue handleBlockUp addStaff success', res)
-        row.status = dataTemp.status
+        this.tableData[this.currentIndex].status = dataTemp.status
+        this.handleBlockUpCancel()
         Message({
           message: res.message,
           type: 'success',

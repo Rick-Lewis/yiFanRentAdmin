@@ -1,32 +1,5 @@
 import request from '@/utils/request'
 
-// 用车申请
-export function fetchApplicationList(data) {
-  return request({
-    url: '/officialcars/application/page',
-    method: 'get',
-    params: data
-  })
-}
-export function applicationCancel(data) {
-  return request({
-    url: `/officialcars/application/cancel/${data.id}`,
-    method: 'post'
-  })
-}
-export function addApplication(data) {
-  return request({
-    url: '/officialcars/application/save',
-    method: 'post',
-    data
-  })
-}
-export function fetchApplicationDetail(data) {
-  return request({
-    url: `/officialcars/application/${data.id}`,
-    method: 'get'
-  })
-}
 // 人员管理
 export function fetchStaffList(data) {
   return request({
@@ -42,7 +15,7 @@ export function addStaff(data) {
     data
   })
 }
-// 企业管理
+// 单位管理
 export function fetchEnterpriseList(data) {
   return request({
     url: '/officialcars/enterprise/page',

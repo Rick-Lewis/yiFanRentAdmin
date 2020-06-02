@@ -32,28 +32,40 @@
             <el-button type="text" size="mini" @click="() => handleEdit(node.data)">
               编辑
             </el-button>
-            <el-button type="text" size="mini" @click="() => handleBlockUp(node.data)">
+            <el-button type="text" size="mini" @click="() => handleStatusChange(node.data)">
               {{ node.data.status ? '停用' : '启用' }}
             </el-button>
           </span>
         </span>
       </el-tree>
     </div>
-    <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增企业' : '编辑企业'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
-      <el-form :model="addtionForm" style="padding-right: 40px;">
+    <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增部门' : '编辑部门'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
+      <el-form ref="additionForm" :model="addtionForm" :rules="additionFormRules" style="padding-right: 40px;">
         <el-form-item label="上级部门" label-width="100px">
           <el-select v-model="addtionForm.parent" placeholder="请选择" style="width: 100%;">
             <el-option v-for="(item, index) in departList" :key="index" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="部门名称" label-width="100px">
-          <el-input v-model="addtionForm.name" placeholder="输入新增部门的名称" />
+        <el-form-item label="部门名称" label-width="100px" prop="name">
+          <el-input v-model="addtionForm.name" placeholder="请输入部门的名称" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleAddCancel">取 消</el-button>
         <el-button type="primary" @click="handleAddConfirm">确 定</el-button>
       </div>
+    </el-dialog>
+    <el-dialog
+      title="提示"
+      :visible.sync="confirmDialog.dialogFormVisible"
+      width="25%"
+      center
+    >
+      <div style="text-align: center">确定要{{ currentItem && currentItem.status ? '停用' : '启用' }}{{ currentItem && currentItem.name }}</div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="handleBlockUpCancel">取 消</el-button>
+        <el-button type="primary" @click="handleBlockUp">确 定</el-button>
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -66,9 +78,15 @@ export default {
   components: {},
   data: function() {
     return {
+      confirmDialog: {
+        dialogFormVisible: false
+      },
       addtionForm: {
         parent: '',
         name: ''
+      },
+      additionFormRules: {
+        name: [{ required: true, message: '请输入部门的名称', trigger: ['blur'] }]
       },
       dialogConfig: {
         dialogFormVisible: false,
@@ -103,17 +121,55 @@ export default {
       pageSize: this.pageSize
     }
     fetchDepartmentList(dataTemp).then(res => {
-      console.log('staff.vue mounted fetchDepartmentList success', res)
+      console.log('enterprise.vue mounted fetchDepartmentList success', res)
       const temp = this.handleDepartmentList(res.data.data)
       this.departList.push(...res.data.data)
       this.tableData.push(...temp)
     }).catch(err => {
-      console.log('staff.vue mounted fetchDepartmentList failure', err)
+      console.log('enterprise.vue mounted fetchDepartmentList failure', err)
     })
   },
   methods: {
-    handleBlockUp(node, data) {
-      console.log('enterprise.vue methods handleBlockUp', node, data)
+    handleBlockUpCancel() {
+      this.currentItem = null
+      this.confirmDialog.dialogFormVisible = false
+    },
+    handleStatusChange(row) {
+      console.log('enterprise.vue methods handleStatusChange', row)
+      this.currentItem = row
+      this.confirmDialog.dialogFormVisible = true
+    },
+    handleBlockUp() {
+      console.log('enterprise.vue methods handleBlockUp')
+      const tempData = {
+        id: this.currentItem.id,
+        status: this.currentItem.status
+      }
+      addDepartment(tempData).then(res => {
+        console.log('enterprise.vue mounted addDepartment success', res)
+        this.handleBlockUpCancel()
+        if (res.code === 0) {
+          this.refreshView()
+          Message({
+            message: res.message,
+            type: 'success',
+            duration: 5 * 1000
+          })
+        } else {
+          Message({
+            message: res.message,
+            type: 'warning',
+            duration: 5 * 1000
+          })
+        }
+      }).catch(err => {
+        console.log('enterprise.vue mounted addDepartment failure', err)
+        Message({
+          message: '操作失败',
+          type: 'warning',
+          duration: 5 * 1000
+        })
+      })
     },
     handleEdit(row) {
       console.log('enterprise.vue methods handleEdit', row)
@@ -206,27 +262,43 @@ export default {
         name: '',
         parent: ''
       }
+      this.$refs['additionForm'].clearValidate()
       this.dialogConfig.currentStatus = ''
-      this.currentIndex = -1
+      this.currentItem = null
       this.dialogConfig.dialogFormVisible = false
     },
     handleAddConfirm() {
-      addDepartment(this.addtionForm).then(res => {
-        console.log('staff.vue mounted addDepartment success', res)
-        this.refreshView()
-        this.handleAddCancel()
-        Message({
-          message: res.message,
-          type: 'success',
-          duration: 5 * 1000
-        })
-      }).catch(err => {
-        console.log('staff.vue mounted addDepartment failure', err)
-        Message({
-          message: '操作失败',
-          type: 'warning',
-          duration: 5 * 1000
-        })
+      this.$refs['additionForm'].validate((valid) => {
+        if (valid) {
+          addDepartment(this.addtionForm).then(res => {
+            console.log('enterprise.vue mounted addDepartment success', res)
+            if (res.code === 0) {
+              this.refreshView()
+              this.handleAddCancel()
+              Message({
+                message: res.message,
+                type: 'success',
+                duration: 5 * 1000
+              })
+            } else {
+              Message({
+                message: res.message,
+                type: 'warning',
+                duration: 5 * 1000
+              })
+            }
+          }).catch(err => {
+            console.log('enterprise.vue mounted addDepartment failure', err)
+            Message({
+              message: '操作失败',
+              type: 'warning',
+              duration: 5 * 1000
+            })
+          })
+          return true
+        } else {
+          return false
+        }
       })
     },
     handleAddtionClick() {

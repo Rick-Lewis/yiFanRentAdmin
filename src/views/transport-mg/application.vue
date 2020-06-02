@@ -12,7 +12,7 @@
             <el-input v-model="conditionForm.reason" placeholder="请输入关键字搜索" />
           </el-form-item>
           <el-form-item label="随车人员">
-            <el-select v-model="conditionForm.member" multiple placeholder="请选择" style="width: 100%;">
+            <el-select v-model="conditionForm.member" multiple collapse-tags placeholder="请选择" style="width: 100%;">
               <el-option
                 v-for="item in conditionForm.options"
                 :key="item.value"
@@ -56,8 +56,8 @@
             <div>待审批</div>
             <el-divider direction="vertical" />
             <div style="padding-right: 100px;">
-              <div><el-link type="primary" @click="handleCancelClick(item)">撤销</el-link></div>
-              <div><el-link type="primary" @click="handleEditClick(item)">编辑</el-link></div>
+              <div v-if="item.status === 0"><el-link type="primary" @click="handleCancelClick(item)">撤销</el-link></div>
+              <div v-if="item.status === 3"><el-link type="primary" @click="handleEditClick(item)">编辑</el-link></div>
               <div style="margin-top: 16px;" @click="handleProcessClick(item)"><el-link type="primary">进度</el-link></div>
             </div>
           </div>
@@ -82,7 +82,8 @@
   </div>
 </template>
 <script>
-import { fetchApplicationList, fetchStaffList, applicationCancel } from '@/api/org-mg'
+import { fetchStaffList } from '@/api/org-mg'
+import { fetchApplicationList, applicationCancel, fetchFlowList } from '@/api/transport-mg'
 // import { Message } from 'element-ui'
 export default {
   name: 'Application',
@@ -133,6 +134,16 @@ export default {
     }).catch(err => {
       console.log('application.vue mounted fetchStaffList failure', err)
     })
+    fetchFlowList().then(res => {
+      console.log('application.vue mounted fetchFlowList success', res)
+    }).catch(err => {
+      console.log('application.vue mounted fetchFlowList failure', err)
+    })
+    // fetchStatusCheck(dataTemp).then(res => {
+    //   console.log('application.vue mounted fetchStatusCheck success', res)
+    // }).catch(err => {
+    //   console.log('application.vue mounted fetchStatusCheck failure', err)
+    // })
     dataTemp = {
       pageIndex: this.pageIndex,
       pageSize: this.pageSize
