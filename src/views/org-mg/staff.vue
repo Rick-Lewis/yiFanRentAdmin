@@ -42,21 +42,38 @@
       </div>
     </div>
     <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增人员' : '编辑人员'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
-      <el-form ref="additionForm" :model="additionForm" :rules="additionFormRules" style="padding-right: 40px;">
-        <el-form-item label="姓名" label-width="100px" prop="name">
-          <el-input v-model="additionForm.name" placeholder="请输入员工姓名" />
-        </el-form-item>
-        <el-form-item label="员工编号" label-width="100px" prop="code">
-          <el-input v-model="additionForm.code" placeholder="请输入员工编号" />
-        </el-form-item>
-        <el-form-item label="所属部门" label-width="100px" prop="department_id">
-          <el-select v-model="additionForm.department_id" placeholder="请选择所属部门" style="width: 100%;" @change="handleSelectChange">
-            <el-option v-for="(item, index) in departmentList" :key="index" :label="item.name" :value="item.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="联系电话" label-width="100px" prop="telephone">
-          <el-input v-model="additionForm.telephone" placeholder="请输入员工手机号" />
-        </el-form-item>
+      <el-form ref="additionForm" :model="additionForm" :rules="additionFormRules">
+        <div style="padding-right: 40px;">
+          <el-form-item label="姓名" label-width="100px" prop="name">
+            <el-input v-model="additionForm.name" placeholder="请输入员工姓名" />
+          </el-form-item>
+          <el-form-item label="员工编号" label-width="100px" prop="code">
+            <el-input v-model="additionForm.code" placeholder="请输入员工编号" />
+          </el-form-item>
+          <el-form-item label="所属部门" label-width="100px" prop="department_id">
+            <el-select v-model="additionForm.department_id" placeholder="请选择所属部门" style="width: 100%;" @change="handleSelectChange">
+              <el-option v-for="(item, index) in departmentList" :key="index" :label="item.name" :value="item.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="联系电话" label-width="100px" prop="telephone">
+            <el-input v-model="additionForm.telephone" placeholder="请输入员工手机号" />
+          </el-form-item>
+        </div>
+        <el-divider />
+        <div style="padding-right: 40px;">
+          <el-form-item label="系统账号" label-width="100px">
+            <el-input v-model="additionForm.username" placeholder="请输入员系统账号" />
+          </el-form-item>
+          <el-form-item label="" label-width="100px">
+            <el-alert
+              type="info"
+              show-icon
+              :closable="false"
+            >
+              <div slot="title">提示：员工的登录密码默认为123456，请提示员工拿到账号立即修改密码！</div>
+            </el-alert>
+          </el-form-item>
+        </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleAddCancel">取 消</el-button>
@@ -78,7 +95,7 @@
   </div>
 </template>
 <script>
-import { fetchStaffList, addStaff, fetchDepartmentList } from '@/api/org-mg'
+import { fetchStaffList, addStaff, fetchDepartmentList, getStaffById } from '@/api/org-mg'
 import { Message } from 'element-ui'
 export default {
   name: 'Staff',
@@ -93,7 +110,8 @@ export default {
         department_id: '',
         name: '',
         code: '',
-        telephone: ''
+        telephone: '',
+        username: ''
       },
       additionFormRules: {
         department_id: [{ required: true, message: '请选择所属部门', trigger: ['blur'] }],
@@ -189,7 +207,8 @@ export default {
         department_id: '',
         name: '',
         code: '',
-        telephone: ''
+        telephone: '',
+        username: ''
       }
       this.$refs['additionForm'].clearValidate()
       this.dialogConfig.currentStatus = ''
@@ -201,6 +220,10 @@ export default {
         if (valid) {
           if (this.dialogConfig.currentStatus === 'edit') {
             this.additionForm.department_name = this.departmentList.find(item => item.id === this.additionForm.department_id).name
+          } else {
+            if (this.additionForm.username) {
+              this.additionForm.password = '123456'
+            }
           }
           addStaff(this.additionForm).then(res => {
             console.log('staff.vue mounted addStaff success', res)
@@ -262,13 +285,19 @@ export default {
     },
     handleEdit(index, row) {
       console.log('staff.vue methods handleEdit', index, row)
-      this.additionForm = {
-        id: row.id,
-        department_id: row.department_id,
-        name: row.name,
-        code: row.code,
-        telephone: row.telephone
-      }
+      getStaffById({ id: row.id }).then(res => {
+        console.log('staff.vue handleEdit getStaffById success', res)
+        this.additionForm = {
+          id: res.data.id,
+          department_id: res.data.department_id,
+          name: res.data.name,
+          code: res.data.code,
+          telephone: res.data.telephone,
+          username: res.data.username
+        }
+      }).catch(err => {
+        console.log('staff.vue handleEdit getStaffById failure', err)
+      })
       this.dialogConfig.currentStatus = 'edit'
       this.currentIndex = index
       this.dialogConfig.dialogFormVisible = true
@@ -277,7 +306,7 @@ export default {
         pageSize: 1000
       }
       fetchDepartmentList(dataTemp).then(res => {
-        console.log('staff.vue mounted fetchDepartmentList success', res)
+        console.log('staff.vue handleEdit fetchDepartmentList success', res)
         this.departmentList.length = 0
         this.departmentList.push(...res.data.data)
       }).catch(err => {

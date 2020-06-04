@@ -26,9 +26,9 @@
       </div>
       <el-tree :data="tableData" show-checkbox node-key="id" :expand-on-click-node="false" style="margin-top: 5px;">
         <span slot-scope="{ node }" class="custom-tree-node">
-          <span>{{ node.data.label }}</span>
-          <span>{{ node.data.status ? '已启用' : '已停用' }}</span>
-          <span>
+          <span style="flex: 1">{{ node.data.label }}</span>
+          <span style="flex: 1; text-align: center;">{{ node.data.status ? '已启用' : '已停用' }}</span>
+          <span style="flex: 1; text-align: right;">
             <el-button type="text" size="mini" @click="() => handleEdit(node.data)">
               编辑
             </el-button>
@@ -143,7 +143,7 @@ export default {
       console.log('enterprise.vue methods handleBlockUp')
       const tempData = {
         id: this.currentItem.id,
-        status: this.currentItem.status
+        status: this.currentItem.status === 0 ? 1 : 0
       }
       addDepartment(tempData).then(res => {
         console.log('enterprise.vue mounted addDepartment success', res)
@@ -270,6 +270,7 @@ export default {
     handleAddConfirm() {
       this.$refs['additionForm'].validate((valid) => {
         if (valid) {
+          this.addtionForm.status = '1'
           addDepartment(this.addtionForm).then(res => {
             console.log('enterprise.vue mounted addDepartment success', res)
             if (res.code === 0) {
@@ -354,7 +355,7 @@ export default {
       justify-content: space-between;
       color: #909399;
       font-size: 14px;
-      padding: 10px 27px;
+      padding: 10px 27px 10px 46px;
       background-color: #f9f9f9;
     }
     .custom-tree-node {

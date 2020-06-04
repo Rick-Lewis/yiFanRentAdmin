@@ -81,6 +81,18 @@ export default {
         lines: '',
         with_driver: 0,
         note: ''
+      },
+      formRules: {
+        name: [{ required: true, message: '请输入单位名称', trigger: ['blur'] }],
+        note: [{ required: true, message: '请输入单位编号', trigger: ['blur'] }],
+        invoice_title: [{ required: true, message: '请输入发票抬头', trigger: ['blur'] }],
+        tax_no: [{ required: true, message: '请输入税号', trigger: ['blur'] }],
+        user: {
+          name: [{ required: true, message: '请输入管理员姓名', trigger: ['blur'] }],
+          username: [{ required: true, message: '请输入管理员账号', trigger: ['blur'] }],
+          telephone: [{ required: true, message: '请输入管理员手机号', trigger: ['blur'] }],
+          password: [{ required: true, message: '请输入密码', trigger: ['blur'] }]
+        }
       }
     }
   },

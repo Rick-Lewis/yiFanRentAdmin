@@ -94,18 +94,6 @@ export default {
         statusList: [{
           label: '-1',
           value: '全部'
-        }, {
-          label: '0',
-          value: '待审批'
-        }, {
-          label: '1',
-          value: '审批中'
-        }, {
-          label: '2',
-          value: '审批通过'
-        }, {
-          label: '3',
-          value: '已撤销'
         }],
         status: '-1',
         reason: '',
@@ -136,6 +124,11 @@ export default {
     })
     fetchFlowList().then(res => {
       console.log('application.vue mounted fetchFlowList success', res)
+      const temp = res.data.map(item => ({
+        label: item.status,
+        value: item.name
+      }))
+      this.conditionForm.statusList.push(...temp)
     }).catch(err => {
       console.log('application.vue mounted fetchFlowList failure', err)
     })
