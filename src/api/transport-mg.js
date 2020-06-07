@@ -1,9 +1,24 @@
 import request from '@/utils/request'
 
+// 租车订单
+export function fetchStore(data) {
+  return request({
+    url: '/rentalcars/store/page',
+    method: 'get',
+    params: data
+  })
+}
+export function fetchVehicleModel(data) {
+  return request({
+    url: '/rentalcars/wechat/vehicle/model/list',
+    method: 'get',
+    params: data
+  })
+}
 // 用车申请
 export function fetchStatusCheck(data) {
   return request({
-    url: '/officialcars/status/check',
+    url: '/officialcars/status/application/check',
     method: 'get',
     params: data
   })

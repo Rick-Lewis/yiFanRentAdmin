@@ -178,6 +178,16 @@ export const asyncRoutes = [
           title: '租车订单',
           roles: ['admin'] // or you can only set roles in sub nav
         }
+      },
+      {
+        path: 'create-order',
+        component: () => import('@/views/transport-mg/create-order'),
+        name: 'CreateOrder',
+        hidden: true,
+        meta: {
+          title: '租车订单',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
       }
     ]
   },

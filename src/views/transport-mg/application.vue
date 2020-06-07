@@ -56,9 +56,10 @@
             <div>待审批</div>
             <el-divider direction="vertical" />
             <div style="padding-right: 100px;">
-              <div v-if="item.status === 0"><el-link type="primary" @click="handleCancelClick(item)">撤销</el-link></div>
-              <div v-if="item.status === 3"><el-link type="primary" @click="handleEditClick(item)">编辑</el-link></div>
-              <div style="margin-top: 16px;" @click="handleProcessClick(item)"><el-link type="primary">进度</el-link></div>
+              <div v-if="item.is_check === 0 || item.is_check === 1"><el-link type="primary" @click="handleCancelClick(item)">撤销</el-link></div>
+              <div v-if="item.is_check === 2"><el-link type="primary" @click="handleCancelClick(item)">去下单</el-link></div>
+              <div v-if="item.is_check === -1"><el-link type="primary" @click="handleEditClick(item)">编辑</el-link></div>
+              <div v-if="item.is_check === 0 || item.is_check === 1 || item.is_check === -2" style="margin-top: 16px;" @click="handleProcessClick(item)"><el-link type="primary">进度</el-link></div>
             </div>
           </div>
           <div class="card-footer">
@@ -83,7 +84,7 @@
 </template>
 <script>
 import { fetchStaffList } from '@/api/org-mg'
-import { fetchApplicationList, applicationCancel, fetchFlowList } from '@/api/transport-mg'
+import { fetchApplicationList, applicationCancel, fetchFlowList, fetchStatusCheck } from '@/api/transport-mg'
 // import { Message } from 'element-ui'
 export default {
   name: 'Application',
@@ -132,11 +133,11 @@ export default {
     }).catch(err => {
       console.log('application.vue mounted fetchFlowList failure', err)
     })
-    // fetchStatusCheck(dataTemp).then(res => {
-    //   console.log('application.vue mounted fetchStatusCheck success', res)
-    // }).catch(err => {
-    //   console.log('application.vue mounted fetchStatusCheck failure', err)
-    // })
+    fetchStatusCheck().then(res => {
+      console.log('application.vue mounted fetchStatusCheck success', res)
+    }).catch(err => {
+      console.log('application.vue mounted fetchStatusCheck failure', err)
+    })
     dataTemp = {
       pageIndex: this.pageIndex,
       pageSize: this.pageSize
@@ -157,16 +158,25 @@ export default {
       this.$router.push({ path: '/transport-mg/application-filled', query: { action: 'edit', id: item.id }})
     },
     handleCancelClick(item) {
+      console.log('applictation.vue methods handleCancelClick', item)
       const dataTemp = {
         id: item.id
       }
-      this.$confirm('确定撤销吗？').then(_ => {
-        applicationCancel(dataTemp).then(res => {
-          console.log('application.vue methods applicationCancel success', res)
-        }).catch(err => {
-          console.log('application.vue methods applicationCancel failure', err)
-        })
-      }).catch(_ => {})
+      switch (item.is_check) {
+        case 0:
+        case 1:
+          this.$confirm('确定撤销吗？').then(_ => {
+            applicationCancel(dataTemp).then(res => {
+              console.log('application.vue methods applicationCancel success', res)
+            }).catch(err => {
+              console.log('application.vue methods applicationCancel failure', err)
+            })
+          }).catch(_ => {})
+          break
+        case 2:
+          this.$router.push({ path: '/transport-mg/create-order', query: { time_start: item.time_start, time_end: item.time_end }})
+          break
+      }
     },
     handleRadioGroupChange(val) {
       console.log('application.vue methods handleRadioGroupChange', val)

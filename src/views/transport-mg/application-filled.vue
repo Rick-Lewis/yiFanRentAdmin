@@ -8,22 +8,25 @@
     <div class="content">
       <div class="header">申请信息</div>
       <div class="main">
-        <el-form ref="form" :model="form" label-width="100px">
+        <el-form ref="form" :model="form" :rules="formRules" label-width="100px">
           <div>
-            <el-form-item label="申请人"><el-select v-model="form.applicant" placeholder="请选择" style="width: 100%;">
-              <el-option
-                v-for="item in form.options"
-                :key="item.value"
-                :label="item.label"
-                :value="item"
-              />
-            </el-select></el-form-item>
-            <el-form-item label="申请人电话"><el-input v-model="form.applicant_tel" placeholder="请输入申请人电话" /></el-form-item>
+            <el-form-item label="申请人" prop="applicant">
+              <el-select v-model="form.applicant" placeholder="请选择" style="width: 100%;">
+                <el-option
+                  v-for="item in form.options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="申请人电话" prop="applicant_tel">
+              <el-input v-model="form.applicant_tel" placeholder="请输入申请人电话" /></el-form-item>
           </div>
-          <el-form-item label="用车事由">
+          <el-form-item label="用车事由" prop="reason">
             <el-input v-model="form.reason" type="textarea" :rows="4" placeholder="请描述用车事由" />
           </el-form-item>
-          <el-form-item label="用车时间">
+          <el-form-item label="用车时间" prop="duration">
             <el-date-picker
               v-model="form.duration"
               type="datetimerange"
@@ -65,7 +68,8 @@
   </div>
 </template>
 <script>
-import { fetchStaffList, addApplication, fetchApplicationDetail } from '@/api/org-mg'
+import { fetchStaffList } from '@/api/org-mg'
+import { addApplication, fetchApplicationDetail } from '@/api/transport-mg'
 import { Message } from 'element-ui'
 export default {
   name: 'ApplicationFilled',
@@ -83,16 +87,10 @@ export default {
         note: ''
       },
       formRules: {
-        name: [{ required: true, message: '请输入单位名称', trigger: ['blur'] }],
-        note: [{ required: true, message: '请输入单位编号', trigger: ['blur'] }],
-        invoice_title: [{ required: true, message: '请输入发票抬头', trigger: ['blur'] }],
-        tax_no: [{ required: true, message: '请输入税号', trigger: ['blur'] }],
-        user: {
-          name: [{ required: true, message: '请输入管理员姓名', trigger: ['blur'] }],
-          username: [{ required: true, message: '请输入管理员账号', trigger: ['blur'] }],
-          telephone: [{ required: true, message: '请输入管理员手机号', trigger: ['blur'] }],
-          password: [{ required: true, message: '请输入密码', trigger: ['blur'] }]
-        }
+        applicant: [{ required: true, message: '请选择申请人', trigger: ['blur', 'change'] }],
+        applicant_tel: [{ required: true, message: '请输入申请人电话', trigger: ['blur'] }],
+        reason: [{ required: true, message: '请输入用车事由', trigger: ['blur'] }],
+        duration: [{ required: true, message: '请选择用车时间', trigger: ['blur'] }]
       }
     }
   },
@@ -140,23 +138,30 @@ export default {
     },
     onSubmit() {
       console.log('application-filled.vue methods onSubmit', this.form)
-      const tempData = Object.assign({}, this.form, {
-        applicant_name: this.form.applicant.value,
-        member: this.form.member.map(item => item.value).join(','),
-        member_name: this.form.member.map(item => item.label).join(','),
-        time_start: this.form.duration[0],
-        time_end: this.form.duration[1]
-      })
-      addApplication(tempData).then(res => {
-        console.log('staff.vue methods onSubmit addApplication success', res)
-        Message({
-          message: res.message,
-          type: 'success',
-          duration: 5 * 1000
-        })
-        this.refreshView()
-      }).catch(err => {
-        console.log('staff.vue methods onSubmit addApplication failure', err)
+      this.$refs['form'].validate((valid) => {
+        if (valid) {
+          const tempData = Object.assign({}, this.form, {
+            applicant_name: this.form.applicant.value,
+            member: this.form.member.map(item => item.value).join(','),
+            member_name: this.form.member.map(item => item.label).join(','),
+            time_start: this.form.duration[0],
+            time_end: this.form.duration[1]
+          })
+          addApplication(tempData).then(res => {
+            console.log('staff.vue methods onSubmit addApplication success', res)
+            Message({
+              message: res.message,
+              type: 'success',
+              duration: 5 * 1000
+            })
+            this.refreshView()
+          }).catch(err => {
+            console.log('staff.vue methods onSubmit addApplication failure', err)
+          })
+          return true
+        } else {
+          return false
+        }
       })
     }
   }
