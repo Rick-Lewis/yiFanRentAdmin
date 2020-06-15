@@ -53,7 +53,7 @@
               <div style="margin-top: 16px;">司机：{{ item.with_driver === 0 ? '自备' : '准备中' }}</div>
             </div>
             <el-divider direction="vertical" />
-            <div>待审批</div>
+            <div>{{ getValueByStatus(item.is_check) }}</div>
             <el-divider direction="vertical" />
             <div style="padding-right: 100px;">
               <div v-if="item.is_check === 0 || item.is_check === 1"><el-link type="primary" @click="handleCancelClick(item)">撤销</el-link></div>
@@ -135,6 +135,11 @@ export default {
     })
     fetchStatusCheck().then(res => {
       console.log('application.vue mounted fetchStatusCheck success', res)
+      const temp = res.data.map(item => ({
+        label: item.status + '',
+        value: item.name
+      }))
+      this.conditionForm.statusList.push(...temp)
     }).catch(err => {
       console.log('application.vue mounted fetchStatusCheck failure', err)
     })
@@ -154,6 +159,10 @@ export default {
     })
   },
   methods: {
+    getValueByStatus(is_check) {
+      const result = this.conditionForm.statusList.find(item => item.label === (is_check + ''))
+      return result.value
+    },
     handleEditClick(item) {
       this.$router.push({ path: '/transport-mg/application-filled', query: { action: 'edit', id: item.id }})
     },

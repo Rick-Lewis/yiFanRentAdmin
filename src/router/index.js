@@ -185,7 +185,17 @@ export const asyncRoutes = [
         name: 'CreateOrder',
         hidden: true,
         meta: {
-          title: '租车订单',
+          title: '下单',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
+      },
+      {
+        path: 'pre-order-detail',
+        component: () => import('@/views/transport-mg/pre-order-detail'),
+        name: 'PreOrderDetail',
+        hidden: true,
+        meta: {
+          title: '订单确认',
           roles: ['admin'] // or you can only set roles in sub nav
         }
       }

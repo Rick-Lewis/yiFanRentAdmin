@@ -1,16 +1,50 @@
 import request from '@/utils/request'
 
 // 租车订单
+export function viewOrder(data) {
+  return request({
+    url: `/officialcars/order/${data.id}`,
+    method: 'get'
+  })
+}
+export function create(data) {
+  return request({
+    url: '/officialcars/order/create',
+    method: 'post',
+    data
+  })
+}
+export function preview(data) {
+  return request({
+    url: '/officialcars/order/preview',
+    method: 'post',
+    data
+  })
+}
 export function fetchStore(data) {
   return request({
-    url: '/rentalcars/store/page',
+    url: '/officialcars/rental/store/list',
     method: 'get',
     params: data
   })
 }
-export function fetchVehicleModel(data) {
+export function fetchCategory(data) {
   return request({
-    url: '/rentalcars/wechat/vehicle/model/list',
+    url: '/officialcars/rental/vehicle/category/list',
+    method: 'get',
+    params: data
+  })
+}
+export function fetchBrand(data) {
+  return request({
+    url: '/officialcars/rental/vehicle/brand/list',
+    method: 'get',
+    params: data
+  })
+}
+export function fetchModal(data) {
+  return request({
+    url: '/officialcars/rental/vehicle/model/list',
     method: 'get',
     params: data
   })
