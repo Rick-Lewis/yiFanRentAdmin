@@ -38,6 +38,9 @@ const actions = {
         if (res.code !== 1) {
           commit('SET_TOKEN', roleAuth.tokens.admin.token)
           setToken(roleAuth.tokens.admin.token)
+          if (res.data) {
+            window.localStorage.setItem('userInfo', JSON.stringify(res.data))
+          }
         }
         resolve(res)
       }).catch(error => {
@@ -72,6 +75,7 @@ const actions = {
         commit('SET_TOKEN', '')
         commit('SET_ROLES', [])
         removeToken()
+        window.localStorage.removeItem('userInfo')
         resetRouter()
 
         // reset visited views and cached views

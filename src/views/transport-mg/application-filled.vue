@@ -1,6 +1,6 @@
 <template>
   <div class="application-filled-container">
-    <el-steps :active="1" finish-status="success" align-center>
+    <el-steps :active="-1" finish-status="success" align-center>
       <el-step title="待领导审批" />
       <el-step title="待公车办审批" />
       <el-step title="审批完成" />
@@ -69,7 +69,7 @@
 </template>
 <script>
 import { fetchStaffList } from '@/api/org-mg'
-import { addApplication, fetchApplicationDetail } from '@/api/transport-mg'
+import { addApplication, fetchApplicationDetail, resubmit } from '@/api/transport-mg'
 import { Message } from 'element-ui'
 export default {
   name: 'ApplicationFilled',
@@ -102,33 +102,80 @@ export default {
       pageSize: 1000
     }
     fetchStaffList(dataTemp).then(res => {
-      console.log('staff.vue mounted fetchStaffList success', res)
+      console.log('application-filled.vue mounted fetchStaffList success', res)
       this.form.options.push(...res.data.data.map(item => ({
         value: item.id,
         label: item.name
       })))
     }).catch(err => {
-      console.log('staff.vue mounted fetchStaffList failure', err)
+      console.log('application-filled.vue mounted fetchStaffList failure', err)
     })
     if (this.$route.query.action === 'edit') {
       fetchApplicationDetail({ id: this.$route.query.id }).then(res => {
-        console.log('staff.vue mounted fetchApplicationDetail success', res)
+        console.log('application-filled.vue mounted fetchApplicationDetail success', res)
+        const temp1 = res.data.member.split(',')
+        const temp2 = res.data.member_name.split(',')
+        const temp3 = temp1.map((item, index) => ({
+          label: temp2[index],
+          value: parseInt(item)
+        }))
+        console.log(temp3)
+        this.form = Object.assign({}, this.form, {
+          id: res.data.id,
+          applicant: {
+            label: res.data.applicant_name,
+            value: res.data.applicant_id
+          },
+          applicant_tel: res.data.applicant_tel,
+          reason: res.data.reason,
+          duration: [res.data.time_start, res.data.time_end],
+          member: [...temp3],
+          lines: res.data.lines,
+          with_driver: res.data.with_driver,
+          note: res.data.note
+        })
       }).catch(err => {
-        console.log('staff.vue mounted fetchApplicationDetail failure', err)
+        console.log('application-filled.vue mounted fetchApplicationDetail failure', err)
       })
     }
   },
   methods: {
-    refreshView() {
-      // In order to make the cached page re-rendered
-      this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
-      const { fullPath } = this.$route
-      this.$nextTick(() => {
-        this.$router.replace({
-          path: '/redirect' + fullPath
-        })
+    toLastView(visitedViews, view) {
+      const latestView = visitedViews.slice(-1)[0]
+      if (latestView) {
+        this.$router.push(latestView.fullPath)
+      } else {
+        // now the default is to redirect to the home page if there is no tags-view,
+        // you can adjust it according to your needs.
+        if (view.name === 'Dashboard') {
+          // to reload home page
+          this.$router.replace({ path: '/redirect' + view.fullPath })
+        } else {
+          this.$router.push('/')
+        }
+      }
+    },
+    isActive(route) {
+      return route.path === this.$route.path
+    },
+    closeSelectedTag() {
+      const view = this.$route
+      this.$store.dispatch('tagsView/delView', view).then(({ visitedViews }) => {
+        if (this.isActive(view)) {
+          this.toLastView(visitedViews, view)
+        }
       })
     },
+    // refreshView() {
+    //   // In order to make the cached page re-rendered
+    //   this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
+    //   const { fullPath } = this.$route
+    //   this.$nextTick(() => {
+    //     this.$router.replace({
+    //       path: '/redirect' + fullPath
+    //     })
+    //   })
+    // },
     back() {
       if (this.$route.query.noGoBack) {
         this.$router.push({ path: '/dashboard' })
@@ -141,23 +188,40 @@ export default {
       this.$refs['form'].validate((valid) => {
         if (valid) {
           const tempData = Object.assign({}, this.form, {
-            applicant_name: this.form.applicant.value,
+            applicant_id: this.form.applicant.value,
+            applicant_name: this.form.applicant.label,
             member: this.form.member.map(item => item.value).join(','),
             member_name: this.form.member.map(item => item.label).join(','),
             time_start: this.form.duration[0],
             time_end: this.form.duration[1]
           })
-          addApplication(tempData).then(res => {
-            console.log('staff.vue methods onSubmit addApplication success', res)
-            Message({
-              message: res.message,
-              type: 'success',
-              duration: 5 * 1000
+          if (this.$route.query.action === 'edit') {
+            resubmit(tempData).then(res => {
+              console.log('application-filled.vue methods onSubmit resubmit success', res)
+              Message({
+                message: res.message,
+                type: 'success',
+                duration: 5 * 1000
+              })
+              this.closeSelectedTag()
+              // this.refreshView()
+            }).catch(err => {
+              console.log('application-filled.vue methods onSubmit resubmit failure', err)
             })
-            this.refreshView()
-          }).catch(err => {
-            console.log('staff.vue methods onSubmit addApplication failure', err)
-          })
+          } else {
+            addApplication(tempData).then(res => {
+              console.log('application-filled.vue methods onSubmit addApplication success', res)
+              Message({
+                message: res.message,
+                type: 'success',
+                duration: 5 * 1000
+              })
+              this.closeSelectedTag()
+              // this.refreshView()
+            }).catch(err => {
+              console.log('application-filled.vue methods onSubmit addApplication failure', err)
+            })
+          }
           return true
         } else {
           return false

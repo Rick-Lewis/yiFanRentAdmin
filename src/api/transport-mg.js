@@ -49,21 +49,55 @@ export function fetchModal(data) {
     params: data
   })
 }
+// 用车审批
+export function checkRefuse(data) {
+  return request({
+    url: '/officialcars/application/check/refuse',
+    method: 'post',
+    data
+  })
+}
+export function checkPass(data) {
+  return request({
+    url: '/officialcars/application/check',
+    method: 'post',
+    data
+  })
+}
+export function fetchAppList(data) {
+  return request({
+    url: '/officialcars/application/check/page',
+    method: 'get',
+    params: data
+  })
+}
 // 用车申请
-export function fetchStatusCheck(data) {
+export function resubmit(data) {
+  return request({
+    url: '/officialcars/application/resubmit',
+    method: 'post',
+    data
+  })
+}
+export function fetchStatus() {
+  return request({
+    url: '/officialcars/status/application',
+    method: 'get'
+  })
+}
+export function fetchStatusCheck() {
   return request({
     url: '/officialcars/status/application/check',
-    method: 'get',
-    params: data
+    method: 'get'
   })
 }
-export function fetchFlowList(data) {
-  return request({
-    url: '/officialcars/check/flow/list',
-    method: 'get',
-    params: data
-  })
-}
+// export function fetchFlowList(data) {
+//   return request({
+//     url: '/officialcars/check/flow/list',
+//     method: 'get',
+//     params: data
+//   })
+// }
 export function fetchApplicationList(data) {
   return request({
     url: '/officialcars/application/page',

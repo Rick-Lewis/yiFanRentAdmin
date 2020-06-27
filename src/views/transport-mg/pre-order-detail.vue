@@ -44,10 +44,10 @@
             <div>车辆租金</div>
             <div>￥{{ detail && detail.fee_list && detail.fee_list.rental_fee }}</div>
           </div>
-          <div class="li-container">
+          <!-- <div class="li-container">
             <div>基础保障服务费</div>
             <div>￥{{ detail && detail.fee_list && detail.fee_list.service_fee }}</div>
-          </div>
+          </div> -->
           <div class="li-container">
             <div>保险费</div>
             <div>￥{{ detail && detail.fee_list && detail.fee_list.insurance_fee }}</div>

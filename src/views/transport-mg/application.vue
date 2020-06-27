@@ -45,7 +45,7 @@
               <div>备注：{{ item.note }}</div>
             </div>
             <el-divider direction="vertical" />
-            <div>
+            <div style="flex-basis: 400px; padding-left: 30px">
               <div>
                 <span>随车人员：</span>
                 <el-tag v-for="(ite, i) in (item.member_name && item.member_name.split(','))" :key="i" size="small">{{ ite }}</el-tag>
@@ -53,19 +53,20 @@
               <div style="margin-top: 16px;">司机：{{ item.with_driver === 0 ? '自备' : '准备中' }}</div>
             </div>
             <el-divider direction="vertical" />
-            <div>{{ getValueByStatus(item.is_check) }}</div>
+            <div class="card-item-container">{{ getValueByStatus(item) }}</div>
             <el-divider direction="vertical" />
-            <div style="padding-right: 100px;">
-              <div v-if="item.is_check === 0 || item.is_check === 1"><el-link type="primary" @click="handleCancelClick(item)">撤销</el-link></div>
-              <div v-if="item.is_check === 2"><el-link type="primary" @click="handleCancelClick(item)">去下单</el-link></div>
-              <div v-if="item.is_check === -1"><el-link type="primary" @click="handleEditClick(item)">编辑</el-link></div>
-              <div v-if="item.is_check === 0 || item.is_check === 1 || item.is_check === -2" style="margin-top: 16px;" @click="handleProcessClick(item)"><el-link type="primary">进度</el-link></div>
+            <div class="card-item-container">
+              <div v-if="item.status === 0 || item.status === 1"><el-link type="primary" @click="handleOptClick(item)">撤销</el-link></div>
+              <div v-if="item.status === 2 && !item.orderno" style="margin-top: 10px;"><el-link type="primary" @click="handleOptClick(item)">去下单</el-link></div>
+              <div v-if="item.status === -1 || item.status === -2" style="margin-top: 10px;"><el-link type="primary" @click="handleOptClick(item)">编辑</el-link></div>
+              <div style="margin-top: 10px;"><el-link type="primary" @click="handleViewDetail(item)">查看详情</el-link></div>
+              <div v-if="item.status !== -1 && item.status !== -2" style="margin-top: 10px;" @click="handleProcessClick(item)"><el-link type="primary">进度</el-link></div>
             </div>
           </div>
-          <div class="card-footer">
+          <div v-if="item.status !== -1 && item.status !== -2" class="card-footer">
             <el-collapse v-model="item.activeNames" :accordion="true" @change="handleClapChange">
               <el-collapse-item title="" name="1">
-                <el-steps :active="1" finish-status="success" align-center>
+                <el-steps :active="item.active" finish-status="success" align-center>
                   <el-step title="待领导审批" />
                   <el-step title="待公车办审批" />
                   <el-step title="审批完成" />
@@ -80,23 +81,62 @@
         <el-pagination background :page-sizes="[5, 8, 10]" :page-size="pageSize" layout="total, prev, pager, next, sizes, jumper" :total="total" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </div>
+    <el-dialog title="申请详情" :visible.sync="dialogVisible" class="dialog-content">
+      <div class="card-container">
+        <div class="card-header">审批编号：{{ activeItemDetail.serialno }}</div>
+        <div class="card-content">
+          <div class="col-container">
+            <div>
+              <div style="font-size: 20px;">{{ activeItemDetail.reason }}</div>
+              <div>{{ activeItemDetail.applicant_name }} 于 {{ activeItemDetail.time_create }} 申请</div>
+            </div>
+            <div>
+              <div>往：古丈县县政府大楼-吉首市高铁站</div>
+              <div style="margin-top: 5px;">返：吉首市高铁站-古丈县宾馆</div>
+            </div>
+            <div>备注：{{ activeItemDetail.note }}</div>
+          </div>
+          <el-divider direction="vertical" />
+          <div style="padding: 0 30px;">
+            <div>
+              <span>随车人员：</span>
+              <el-tag v-for="(ite, i) in (activeItemDetail.member_name && activeItemDetail.member_name.split(','))" :key="i" size="small">{{ ite }}</el-tag>
+            </div>
+            <div style="margin-top: 16px;">司机：{{ activeItemDetail.with_driver === 0 ? '自备' : '准备中' }}</div>
+          </div>
+          <el-divider direction="vertical" />
+          <div class="card-item-container">{{ getValueByStatus(activeItemDetail) }}</div>
+          <div />
+        </div>
+        <div class="card-footer" style="margin-top: 20px;">
+          <el-steps :active="activeItemDetail.active" finish-status="success" align-center>
+            <el-step title="待领导审批" />
+            <el-step title="待公车办审批" />
+            <el-step title="审批完成" />
+          </el-steps>
+        </div>
+      </div>
+      <div v-if="tableData.length === 0" class="el-table__empty-block"><span class="el-table__empty-text">暂无数据</span></div>
+    </el-dialog>
   </div>
 </template>
 <script>
 import { fetchStaffList } from '@/api/org-mg'
-import { fetchApplicationList, applicationCancel, fetchFlowList, fetchStatusCheck } from '@/api/transport-mg'
+import { fetchApplicationList, applicationCancel, fetchStatus, fetchApplicationDetail } from '@/api/transport-mg'
 // import { Message } from 'element-ui'
 export default {
   name: 'Application',
   components: {},
   data: function() {
     return {
+      dialogVisible: false,
+      activeItemDetail: {}, // 申请详情
       conditionForm: {
         statusList: [{
-          label: '-1',
+          label: '-9',
           value: '全部'
         }],
-        status: '-1',
+        status: '-9',
         reason: '',
         options: [],
         member: ''
@@ -123,25 +163,15 @@ export default {
     }).catch(err => {
       console.log('application.vue mounted fetchStaffList failure', err)
     })
-    fetchFlowList().then(res => {
-      console.log('application.vue mounted fetchFlowList success', res)
-      const temp = res.data.map(item => ({
-        label: item.status,
-        value: item.name
-      }))
-      this.conditionForm.statusList.push(...temp)
-    }).catch(err => {
-      console.log('application.vue mounted fetchFlowList failure', err)
-    })
-    fetchStatusCheck().then(res => {
-      console.log('application.vue mounted fetchStatusCheck success', res)
+    fetchStatus().then(res => {
+      console.log('application.vue mounted fetchStatus success', res)
       const temp = res.data.map(item => ({
         label: item.status + '',
         value: item.name
       }))
       this.conditionForm.statusList.push(...temp)
     }).catch(err => {
-      console.log('application.vue mounted fetchStatusCheck failure', err)
+      console.log('application.vue mounted fetchStatus failure', err)
     })
     dataTemp = {
       pageIndex: this.pageIndex,
@@ -149,9 +179,31 @@ export default {
     }
     fetchApplicationList(dataTemp).then(res => {
       console.log('application.vue mounted fetchStaffList success', res)
-      const temp = res.data.data.map(item => Object.assign({}, item, {
-        activeNames: []
-      }))
+      const temp = res.data.data.map(item => {
+        let temp = 0
+        switch (item.status) {
+          case 0: // 待审批
+            temp = 0
+            break
+          case 1: // 审批中
+            if (item.is_check === 2 && item.is_confirm === 1) {
+              temp = 3
+            } else if (item.is_check === 2) {
+              temp = 1
+            }
+            break
+          case 2: // 已通过
+            temp = 3
+            break
+          case -1: // 已撤销
+          case -2: // 已驳回
+            break
+        }
+        return Object.assign({}, item, {
+          activeNames: [],
+          active: temp
+        })
+      })
       this.tableData.push(...temp)
       this.total = res.data.total
     }).catch(err => {
@@ -159,24 +211,76 @@ export default {
     })
   },
   methods: {
-    getValueByStatus(is_check) {
-      const result = this.conditionForm.statusList.find(item => item.label === (is_check + ''))
+    refreshData() {
+      const dataTemp = {
+        reason: this.conditionForm.reason,
+        status: this.conditionForm.status === '-9' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchApplicationList(dataTemp).then(res => {
+        console.log('application.vue mounted fetchApplicationList success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('application.vue mounted fetchApplicationList failure', err)
+      })
+    },
+    handleViewDetail(item) {
+      console.log('application.vue handleViewDetail', item)
+      fetchApplicationDetail({ id: item.id }).then(res => {
+        console.log('application.vue mounted fetchApplicationDetail success', res)
+        let temp = 0
+        switch (res.data.status) {
+          case 0: // 待审批
+            temp = 0
+            break
+          case 1: // 审批中
+            if (res.data.is_check === 2 && res.data.is_confirm === 1) {
+              temp = 3
+            } else if (res.data.is_check === 2) {
+              temp = 1
+            }
+            break
+          case 2: // 已通过
+            temp = 3
+            break
+          case -1: // 已撤销
+          case -2: // 已驳回
+            temp = -1
+            break
+        }
+        this.activeItemDetail = Object.assign({}, res.data, {
+          active: temp
+        })
+        this.dialogVisible = true
+      }).catch(err => {
+        console.log('application.vue mounted fetchApplicationDetail failure', err)
+      })
+    },
+    getValueByStatus(item) {
+      if (JSON.stringify(item) === '{}') {
+        return ''
+      }
+      const result = this.conditionForm.statusList.find(i => i.label === (item.status + ''))
       return result.value
     },
-    handleEditClick(item) {
-      this.$router.push({ path: '/transport-mg/application-filled', query: { action: 'edit', id: item.id }})
-    },
-    handleCancelClick(item) {
-      console.log('applictation.vue methods handleCancelClick', item)
+    // handleEditClick(item) {
+    //   this.$router.push({ path: '/transport-mg/application-filled', query: { action: 'edit', id: item.id }})
+    // },
+    handleOptClick(item) {
+      console.log('applictation.vue methods handleOptClick', item)
       const dataTemp = {
         id: item.id
       }
-      switch (item.is_check) {
+      switch (item.status) {
         case 0:
         case 1:
           this.$confirm('确定撤销吗？').then(_ => {
             applicationCancel(dataTemp).then(res => {
               console.log('application.vue methods applicationCancel success', res)
+              this.refreshData()
             }).catch(err => {
               console.log('application.vue methods applicationCancel failure', err)
             })
@@ -184,6 +288,10 @@ export default {
           break
         case 2:
           this.$router.push({ path: '/transport-mg/create-order', query: { time_start: item.time_start, time_end: item.time_end }})
+          break
+        case -1:
+        case -2:
+          this.$router.push({ path: '/transport-mg/application-filled', query: { action: 'edit', id: item.id }})
           break
       }
     },
@@ -193,7 +301,7 @@ export default {
       const dataTemp = {
         reason: this.conditionForm.reason,
         member_name: this.conditionForm.member.map(item => item.label).join(','),
-        status: val === '-1' ? '' : val,
+        status: val === '-9' ? '' : val,
         pageIndex: 1,
         pageSize: this.pageSize
       }
@@ -215,7 +323,7 @@ export default {
       const dataTemp = {
         reason: this.conditionForm.reason,
         member_name: this.conditionForm.member.map(item => item.label).join(','),
-        status: this.status === '-1' ? '' : this.status,
+        status: this.status === '-9' ? '' : this.status,
         pageIndex: 1,
         pageSize: this.pageSize
       }
@@ -238,8 +346,94 @@ export default {
     handleClapChange(val) {
       console.log('application.vue handleClapChange', val)
     },
-    handleSizeChange() {},
-    handleCurrentChange() {}
+    handleSizeChange(val) {
+      console.log('examine.vue methods handleSizeChange', val, this.pageIndex)
+      this.pageSize = val
+      const dataTemp = {
+        reason: this.conditionForm.reason,
+        status: this.conditionForm.status === '-9' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchApplicationList(dataTemp).then(res => {
+        console.log('application.vue mounted fetchStaffList success', res)
+        const temp = res.data.data.map(item => {
+          let temp = 0
+          switch (item.status) {
+            case 0: // 待审批
+              temp = 0
+              break
+            case 1: // 审批中
+              if (item.is_check === 2 && item.is_confirm === 1) {
+                temp = 3
+              } else if (item.is_check === 2) {
+                temp = 1
+              }
+              break
+            case 2: // 已通过
+              temp = 3
+              break
+            case -1: // 已撤销
+            case -2: // 已驳回
+              temp = -1
+              break
+          }
+          return Object.assign({}, item, {
+            activeNames: [],
+            active: temp
+          })
+        })
+        this.tableData.length = 0
+        this.tableData.push(...temp)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('application.vue mounted fetchStaffList failure', err)
+      })
+    },
+    handleCurrentChange(val) {
+      console.log('examine.vue methods handleCurrentChange', val)
+      this.pageIndex = val
+      const dataTemp = {
+        reason: this.conditionForm.reason,
+        status: this.conditionForm.status === '-9' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchApplicationList(dataTemp).then(res => {
+        console.log('application.vue mounted fetchStaffList success', res)
+        const temp = res.data.data.map(item => {
+          let temp = 0
+          switch (item.status) {
+            case 0: // 待审批
+              temp = 0
+              break
+            case 1: // 审批中
+              if (item.is_check === 2 && item.is_confirm === 1) {
+                temp = 3
+              } else if (item.is_check === 2) {
+                temp = 1
+              }
+              break
+            case 2: // 已通过
+              temp = 3
+              break
+            case -1: // 已撤销
+            case -2: // 已驳回
+              temp = -1
+              break
+          }
+          return Object.assign({}, item, {
+            activeNames: [],
+            active: temp
+          })
+        })
+        this.tableData.length = 0
+        this.tableData.push(...temp)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('application.vue mounted fetchStaffList failure', err)
+      })
+    }
   }
 }
 </script>
@@ -262,8 +456,7 @@ export default {
       }
     }
   }
-  .content{
-    margin-top: 10px;
+  @mixin common{
     .card-container{
       background-color: #ffffff;
       padding-top: 16px;
@@ -277,10 +470,11 @@ export default {
       .card-content{
         display: flex;
         padding: 16px 0 16px 22px;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
         // border-bottom: 1px solid #DCDFE6;
         .col-container{
+          flex-basis: 400px;
           & > div:first-child{
             display: flex;
             align-items: center;
@@ -299,6 +493,10 @@ export default {
         .el-divider--vertical{
           height: 80px;
         }
+        .card-item-container{
+          flex-grow: 1;
+          text-align: center;
+        }
       }
       .card-footer{
         /deep/.el-collapse{
@@ -313,6 +511,10 @@ export default {
         }
       }
     }
+  }
+  .content{
+    margin-top: 10px;
+    @include common;
     .el-table__empty-block {
       min-height: 60px;
       text-align: center;
@@ -334,6 +536,9 @@ export default {
         padding: 0;
       }
     }
+  }
+  .dialog-content{
+    @include common;
   }
 }
 </style>
