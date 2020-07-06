@@ -1,9 +1,9 @@
 <template>
   <div class="application-filled-container">
-    <el-steps :active="-1" finish-status="success" align-center>
-      <el-step title="待领导审批" />
-      <el-step title="待公车办审批" />
-      <el-step title="审批完成" />
+    <el-steps :active="0" finish-status="success" align-center>
+      <el-step title="填写用车申请" />
+      <el-step title="进行审批" />
+      <el-step title="生成订单" />
     </el-steps>
     <div class="content">
       <div class="header">申请信息</div>
@@ -33,7 +33,7 @@
               range-separator="至"
               start-placeholder="开始日期"
               end-placeholder="结束日期"
-              value-format="yyyy-MM-dd hh:mm:ss"
+              value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
           <el-form-item label="随车人员">
@@ -74,6 +74,19 @@ import { Message } from 'element-ui'
 export default {
   name: 'ApplicationFilled',
   data: function() {
+    var validateDuration = (rule, value, callback) => {
+      console.log(rule, value)
+      const now = new Date().getTime()
+      const start = new Date(value[0]).getTime()
+      const end = new Date(value[1]).getTime()
+      if (end - start < 24 * 60 * 60 * 1000) {
+        return callback(new Error('用车时间不能少于1天'))
+      }
+      if (start - now < 2 * 60 * 60 * 1000) {
+        return callback(new Error('用车时间不能少于当前两小时'))
+      }
+      callback()
+    }
     return {
       form: {
         applicant: '',
@@ -90,7 +103,7 @@ export default {
         applicant: [{ required: true, message: '请选择申请人', trigger: ['blur', 'change'] }],
         applicant_tel: [{ required: true, message: '请输入申请人电话', trigger: ['blur'] }],
         reason: [{ required: true, message: '请输入用车事由', trigger: ['blur'] }],
-        duration: [{ required: true, message: '请选择用车时间', trigger: ['blur'] }]
+        duration: [{ required: true, message: '请选择用车时间', trigger: ['blur'] }, { validator: validateDuration, trigger: 'blur' }]
       }
     }
   },
@@ -204,6 +217,7 @@ export default {
                 duration: 5 * 1000
               })
               this.closeSelectedTag()
+              // this.$router.push({ path: '/transport-mg/application' })
               // this.refreshView()
             }).catch(err => {
               console.log('application-filled.vue methods onSubmit resubmit failure', err)
@@ -217,6 +231,7 @@ export default {
                 duration: 5 * 1000
               })
               this.closeSelectedTag()
+              // this.$router.push({ path: '/transport-mg/application' })
               // this.refreshView()
             }).catch(err => {
               console.log('application-filled.vue methods onSubmit addApplication failure', err)

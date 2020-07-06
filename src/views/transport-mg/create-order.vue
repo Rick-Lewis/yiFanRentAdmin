@@ -91,7 +91,8 @@
           </el-table-column>
           <el-table-column prop="action" label="操作" align="center" width="300px">
             <template slot-scope="scope">
-              <el-button size="mini" type="primary" @click="handleRent(scope.$index, scope.row)">租车</el-button>
+              <el-button v-if="scope.row.num > 0" size="mini" type="primary" @click="handleRent(scope.$index, scope.row)">租车</el-button>
+              <span v-else>无可用车辆</span>
             </template>
           </el-table-column>
         </el-table>
@@ -166,6 +167,9 @@ export default {
     }
   },
   computed: {
+    serialno: function() {
+      return this.$route.query.serialno
+    },
     time_start: function() {
       return this.$route.query.time_start
     },
@@ -173,6 +177,9 @@ export default {
       return this.$route.query.time_end
     },
     duration: function() {
+      if (!this.$route.query.time_start || !this.$route.query.time_end) {
+        return 0
+      }
       const startDate = new Date(this.$route.query.time_start).getTime()
       const endDate = new Date(this.$route.query.time_end).getTime()
       return parseInt(Math.abs(endDate - startDate) / 1000 / 60 / 60 / 24)
@@ -280,7 +287,8 @@ export default {
         time_end: this.time_end,
         days: this.duration,
         model_id: item.id,
-        store_pick_up: this.conditionForm.store
+        store_pick_up: this.conditionForm.store,
+        serialno: this.serialno
       }
       console.log('create-order.vue methods handleRent', index, item, temp)
       this.$store.dispatch('order/setSubmitForm', temp)

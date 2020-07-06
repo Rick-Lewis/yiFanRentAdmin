@@ -61,8 +61,8 @@
         </div>
         <el-divider />
         <div style="padding-right: 40px;">
-          <el-form-item label="系统账号" label-width="100px">
-            <el-input v-model="additionForm.username" placeholder="请输入员系统账号" />
+          <el-form-item label="系统账号" label-width="100px" prop="username">
+            <el-input v-model="additionForm.username" :disabled="!dialogConfig.accountEditable" placeholder="请输入系统账号" />
           </el-form-item>
           <el-form-item label="" label-width="100px">
             <el-alert
@@ -117,11 +117,13 @@ export default {
         department_id: [{ required: true, message: '请选择所属部门', trigger: ['blur'] }],
         name: [{ required: true, message: '请输入员工姓名', trigger: ['blur'] }],
         code: [{ required: true, message: '请输入员工编号', trigger: ['blur'] }],
-        telephone: [{ required: true, message: '请输入员工手机号', trigger: ['blur'] }]
+        telephone: [{ required: true, message: '请输入员工手机号', trigger: ['blur'] }],
+        username: [{ required: true, message: '请输入系统账号', trigger: ['blur'] }]
       },
       dialogConfig: {
         dialogFormVisible: false,
-        currentStatus: '' // 当前的状态，编辑（edit）或者是新增（add）
+        currentStatus: '', // 当前的状态，编辑（edit）或者是新增（add）
+        accountEditable: true // 账号是否可编辑
       },
       currentIndex: -1, // 记录当前状态下操作的目标数据的索引
       conditionForm: {
@@ -218,8 +220,14 @@ export default {
     handleAddConfirm() {
       this.$refs['additionForm'].validate((valid) => {
         if (valid) {
+          const result = Object.assign({}, this.additionForm)
           if (this.dialogConfig.currentStatus === 'edit') {
             this.additionForm.department_name = this.departmentList.find(item => item.id === this.additionForm.department_id).name
+            if (!this.dialogConfig.accountEditable) {
+              delete result.username
+            } else if (this.additionForm.username) {
+              this.additionForm.password = '123456'
+            }
           } else {
             if (this.additionForm.username) {
               this.additionForm.password = '123456'
@@ -227,6 +235,7 @@ export default {
           }
           addStaff(this.additionForm).then(res => {
             console.log('staff.vue mounted addStaff success', res)
+            this.dialogConfig.accountEditable = true
             if (this.dialogConfig.currentStatus === 'edit') {
               this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], this.additionForm))
             } else {
@@ -287,6 +296,11 @@ export default {
       console.log('staff.vue methods handleEdit', index, row)
       getStaffById({ id: row.id }).then(res => {
         console.log('staff.vue handleEdit getStaffById success', res)
+        if (!res.data.username) {
+          this.dialogConfig.accountEditable = true
+        } else {
+          this.dialogConfig.accountEditable = false
+        }
         this.additionForm = {
           id: res.data.id,
           department_id: res.data.department_id,

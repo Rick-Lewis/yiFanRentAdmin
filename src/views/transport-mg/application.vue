@@ -39,8 +39,8 @@
                 <div>{{ item.applicant_name }} 于 {{ item.time_create }} 申请</div>
               </div>
               <div>
-                <div>往：古丈县县政府大楼-吉首市高铁站</div>
-                <div style="margin-top: 5px;">返：吉首市高铁站-古丈县宾馆</div>
+                <div>行车路线：{{ item.lines }}</div>
+                <!-- <div style="margin-top: 5px;">返：吉首市高铁站-古丈县宾馆</div> -->
               </div>
               <div>备注：{{ item.note }}</div>
             </div>
@@ -186,7 +186,9 @@ export default {
             temp = 0
             break
           case 1: // 审批中
-            if (item.is_check === 2 && item.is_confirm === 1) {
+            if (item.is_check === 1) {
+              temp = 0
+            } else if (item.is_check === 2 && item.is_confirm === 1) {
               temp = 3
             } else if (item.is_check === 2) {
               temp = 1
@@ -237,7 +239,9 @@ export default {
             temp = 0
             break
           case 1: // 审批中
-            if (res.data.is_check === 2 && res.data.is_confirm === 1) {
+            if (item.is_check === 1) {
+              temp = 0
+            } else if (res.data.is_check === 2 && res.data.is_confirm === 1) {
               temp = 3
             } else if (res.data.is_check === 2) {
               temp = 1
@@ -287,7 +291,7 @@ export default {
           }).catch(_ => {})
           break
         case 2:
-          this.$router.push({ path: '/transport-mg/create-order', query: { time_start: item.time_start, time_end: item.time_end }})
+          this.$router.push({ path: '/transport-mg/create-order', query: { time_start: item.time_start, time_end: item.time_end, serialno: item.serialno }})
           break
         case -1:
         case -2:
@@ -364,7 +368,9 @@ export default {
               temp = 0
               break
             case 1: // 审批中
-              if (item.is_check === 2 && item.is_confirm === 1) {
+              if (item.is_check === 1) {
+                temp = 0
+              } else if (item.is_check === 2 && item.is_confirm === 1) {
                 temp = 3
               } else if (item.is_check === 2) {
                 temp = 1
@@ -408,7 +414,9 @@ export default {
               temp = 0
               break
             case 1: // 审批中
-              if (item.is_check === 2 && item.is_confirm === 1) {
+              if (item.is_check === 1) {
+                temp = 0
+              } else if (item.is_check === 2 && item.is_confirm === 1) {
                 temp = 3
               } else if (item.is_check === 2) {
                 temp = 1

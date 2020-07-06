@@ -31,7 +31,7 @@
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="reason" label="用车事由" align="center" />
         <el-table-column prop="applicant_name" label="申请人" align="center" />
-        <el-table-column prop="user.username" label="申请单位" align="center" />
+        <el-table-column prop="serialno" label="申请单号" align="center" />
         <el-table-column prop="time_create" label="申请时间" align="center" />
         <el-table-column prop="member_name" label="随车人员" align="center" />
         <el-table-column prop="status" label="状态" align="center">
@@ -271,7 +271,9 @@ export default {
             temp = 0
             break
           case 1: // 审批中
-            if (res.data.is_check === 2 && res.data.is_confirm === 1) {
+            if (item.is_check === 1) {
+              temp = 0
+            } else if (res.data.is_check === 2 && res.data.is_confirm === 1) {
               temp = 3
             } else if (res.data.is_check === 2) {
               temp = 1
@@ -293,10 +295,14 @@ export default {
       })
     },
     getValueByStatus(item) {
-      if (JSON.stringify(item) === '{}') {
+      console.log(this.conditionForm.statusList, item)
+      if (this.conditionForm.statusList.length === 0 || JSON.stringify(item) === '{}') {
         return ''
       }
       const result = this.conditionForm.statusList.find(i => i.label === (item.status + ''))
+      if (!result) {
+        return ''
+      }
       return result.value
     },
     onSearch() {},

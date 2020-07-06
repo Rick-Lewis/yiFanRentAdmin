@@ -6,22 +6,22 @@
 
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-        <search id="header-search" class="right-menu-item" />
+        <!-- <search id="header-search" class="right-menu-item" /> -->
 
         <error-log class="errLog-container right-menu-item hover-effect" />
 
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
-        <el-tooltip content="尺寸" effect="dark" placement="bottom">
+        <!-- <el-tooltip content="尺寸" effect="dark" placement="bottom">
           <size-select id="size-select" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        </el-tooltip> -->
 
       </template>
 
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
         <div class="avatar-wrapper">
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
-          <i class="el-icon-caret-bottom" />
+          <div style="margin-left: 5px;">{{ userInfo && userInfo.name }}<i class="el-icon-caret-bottom" /></div>
         </div>
         <el-dropdown-menu slot="dropdown">
           <router-link to="/profile/index">
@@ -48,24 +48,27 @@ import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import ErrorLog from '@/components/ErrorLog'
 import Screenfull from '@/components/Screenfull'
-import SizeSelect from '@/components/SizeSelect'
-import Search from '@/components/HeaderSearch'
+// import SizeSelect from '@/components/SizeSelect'
+// import Search from '@/components/HeaderSearch'
 
 export default {
   components: {
     Breadcrumb,
     Hamburger,
     ErrorLog,
-    Screenfull,
-    SizeSelect,
-    Search
+    Screenfull
   },
   computed: {
     ...mapGetters([
       'sidebar',
       'avatar',
       'device'
-    ])
+    ]),
+    userInfo: function() {
+      const temp = JSON.parse(window.localStorage.getItem('userInfo'))
+      if (temp) return temp
+      return ''
+    }
   },
   methods: {
     toggleSideBar() {
@@ -141,7 +144,9 @@ export default {
 
       .avatar-wrapper {
         margin-top: 5px;
-        position: relative;
+        // position: relative;
+        display: flex;
+        justify-content: space-between;
 
         .user-avatar {
           cursor: pointer;
@@ -152,9 +157,9 @@ export default {
 
         .el-icon-caret-bottom {
           cursor: pointer;
-          position: absolute;
-          right: -20px;
-          top: 25px;
+          // position: absolute;
+          // right: -20px;
+          // top: 25px;
           font-size: 12px;
         }
       }

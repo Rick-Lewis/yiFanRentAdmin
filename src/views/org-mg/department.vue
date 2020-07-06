@@ -175,7 +175,7 @@ export default {
       console.log('enterprise.vue methods handleEdit', row)
       this.addtionForm = {
         id: row.id,
-        name: row.name
+        name: row.label
       }
       if (row.parent !== 0) {
         this.addtionForm.parent = row.parent

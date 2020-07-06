@@ -8,8 +8,8 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="订单状态">
-          <el-radio-group v-model="conditionForm.isExist" size="small" @change="(val) => handleRadioGroupChange(val, 'isExist')">
-            <el-radio v-for="(item, index) in conditionForm.isExistList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
+          <el-radio-group v-model="conditionForm.with_driver" size="small" @change="(val) => handleRadioGroupChange(val, 'with_driver')">
+            <el-radio v-for="(item, index) in conditionForm.withDriverList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="用车事由">
@@ -21,15 +21,16 @@
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
+            value-format="yyyy-MM-dd hh:mm:ss"
             :picker-options="conditionForm.pickerOptions"
           />
         </el-form-item>
         <div class="other-container">
           <el-form-item label="订单编号">
-            <el-input v-model="conditionForm.code" placeholder="请输入订单编号" />
+            <el-input v-model="conditionForm.order_no" placeholder="请输入订单编号" />
           </el-form-item>
           <el-form-item label="车牌号">
-            <el-input v-model="conditionForm.number" placeholder="请输入车牌号" />
+            <el-input v-model="conditionForm.plate_num" placeholder="请输入车牌号" />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSearch">查询</el-button>
@@ -39,18 +40,23 @@
     </div>
     <div class="content">
       <el-table :data="tableData" border style="width: 100%">
-        <el-table-column prop="name" label="用车事由" align="center" />
-        <el-table-column prop="note" label="随车人员" align="center" />
-        <el-table-column prop="user.name" label="租用车型" align="center" />
-        <el-table-column prop="user.username" label="申请人" align="center" />
-        <el-table-column prop="user.username" label="申请单位" align="center" />
-        <el-table-column prop="user.telephone" label="申请时间" align="center" />
+        <el-table-column prop="plate_num" label="车牌号" align="center" />
+        <el-table-column prop="model_name" label="车型" align="center" />
+        <el-table-column label="租车时间" align="center" width="300px">
+          <template slot-scope="scope"><div>{{ scope.row.time_start + '至' + scope.row.time_end }}</div></template>
+        </el-table-column>
+        <el-table-column prop="price_total" label="费用（元）" align="center" />
+        <el-table-column prop="with_driver" label="司机" align="center">
+          <template slot-scope="scope"><div>{{ scope.row.with_driver === 0 ? '不需要' : '需要' }}</div></template>
+        </el-table-column>
+        <el-table-column prop="nick_name" label="租车人" align="center" />
         <el-table-column prop="status" label="状态" align="center">
-          <template slot-scope="scope"><div>{{ scope.row.status ? '已启用' : '已停用' }}</div></template>
+          <template slot-scope="scope"><div>{{ getValueByStatus(scope.row) }}</div></template>
         </el-table-column>
         <el-table-column prop="action" label="操作" align="center" width="300px">
           <template slot-scope="scope">
-            <el-button size="mini" type="primary" @click="handleAudit(scope.$index, scope.row)">审核</el-button>
+            <el-button size="mini" type="primary" @click="handleAudit(scope.$index, scope.row)">取消</el-button>
+            <el-button size="mini" type="primary" @click="handleAudit(scope.$index, scope.row)">订单详情</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -61,6 +67,7 @@
   </div>
 </template>
 <script>
+import { fetchOrder, fetchOrderStatus } from '@/api/transport-mg'
 export default {
   name: 'Order',
   components: {},
@@ -68,32 +75,11 @@ export default {
     return {
       conditionForm: {
         statusList: [{
-          label: '-1',
+          label: '-9',
           value: '全部'
-        }, {
-          label: '0',
-          value: '待付款'
-        }, {
-          label: '1',
-          value: '已付款'
-        }, {
-          label: '2',
-          value: '租用中'
-        }, {
-          label: '3',
-          value: '待评价'
-        }, {
-          label: '4',
-          value: '已完成'
-        }, {
-          label: '5',
-          value: '已取消'
-        }, {
-          label: '6',
-          value: '已退款'
         }],
-        isExistList: [{
-          label: '-1',
+        withDriverList: [{
+          label: '-9',
           value: '全部'
         }, {
           label: '0',
@@ -102,8 +88,8 @@ export default {
           label: '1',
           value: '有'
         }],
-        status: '-1',
-        isExist: '-1',
+        status: '-9',
+        with_driver: '-9',
         pickerOptions: {
           shortcuts: [{
             text: '今天',
@@ -140,41 +126,143 @@ export default {
             }
           }]
         },
-        duration: '',
-        code: '',
-        number: ''
+        duration: [],
+        order_no: '',
+        plate_num: ''
       },
       tableData: [],
-      pageIndex: 0,
+      pageIndex: 1,
       pageSize: 5,
       total: 0
     }
   },
   computed: {},
-  created() {},
+  created() {
+    fetchOrderStatus().then(res => {
+      console.log('order.vue mounted fetchOrderStatus success', res)
+      const temp = res.data.map(item => ({
+        label: item.status + '',
+        value: item.name
+      }))
+      this.conditionForm.statusList.push(...temp)
+    }).catch(err => {
+      console.log('order.vue mounted fetchOrderStatus failure', err)
+    })
+    const dataTemp = {
+      pageIndex: this.pageIndex,
+      pageSize: this.pageSize
+    }
+    fetchOrder(dataTemp).then(res => {
+      console.log('order.vue created fetchOrder success', res)
+      this.tableData.length = 0
+      this.tableData.push(...res.data.data)
+      this.total = res.data.total
+    }).catch(err => {
+      console.log('order.vue created fetchOrder failure', err)
+    })
+  },
   mounted() {},
   methods: {
-    onSearch() {},
+    getValueByStatus(item) {
+      if (JSON.stringify(item) === '{}') {
+        return ''
+      }
+      const result = this.conditionForm.statusList.find(i => i.label === (item.status + ''))
+      return result.value
+    },
+    onSearch() {
+      const dataTemp = {
+        pageIndex: 1,
+        pageSize: this.pageSize
+      }
+      if (this.conditionForm.status !== -9) {
+        dataTemp['status'] = this.conditionForm.status
+      }
+      if (this.conditionForm.with_driver !== -9) {
+        dataTemp['with_driver'] = this.conditionForm.with_driver
+      }
+      if (this.conditionForm.duration.length > 0) {
+        dataTemp['time_start'] = this.conditionForm.duration[0]
+        dataTemp['time_end'] = this.conditionForm.duration[1]
+      }
+      if (this.conditionForm.order_no) {
+        dataTemp['order_no'] = this.conditionForm.order_no
+      }
+      if (this.conditionForm.plate_num) {
+        dataTemp['plate_num'] = this.conditionForm.plate_num
+      }
+      fetchOrder(dataTemp).then(res => {
+        console.log('order.vue mounted fetchOrder success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('order.vue mounted fetchOrder failure', err)
+      })
+    },
     handleRadioGroupChange(val, type) {
-      console.log('enterprise.vue methods handleRadioGroupChange', val, type)
-      // const dataTemp = {
-      //   name: this.conditionForm.name,
-      //   status: val === '-1' ? '' : val,
-      //   pageIndex: 1,
-      //   pageSize: this.pageSize
-      // }
-      // fetchEnterpriseList(dataTemp).then(res => {
-      //   console.log('enterprise.vue mounted fetchEnterpriseList success', res)
-      //   this.tableData.length = 0
-      //   this.tableData.push(...res.data.data)
-      //   this.total = res.data.total
-      // }).catch(err => {
-      //   console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
-      // })
+      console.log('order.vue methods handleRadioGroupChange', val, type, this.conditionForm.duration)
+      const dataTemp = {
+        pageIndex: 1,
+        pageSize: this.pageSize
+      }
+      if (val !== '-9') {
+        dataTemp[type] = val
+      }
+      if (this.conditionForm.duration.length > 0) {
+        dataTemp['time_start'] = this.conditionForm.duration[0]
+        dataTemp['time_end'] = this.conditionForm.duration[1]
+      }
+      if (this.conditionForm.order_no) {
+        dataTemp['order_no'] = this.conditionForm.order_no
+      }
+      if (this.conditionForm.plate_num) {
+        dataTemp['plate_num'] = this.conditionForm.plate_num
+      }
+      fetchOrder(dataTemp).then(res => {
+        console.log('order.vue mounted fetchOrder success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('order.vue mounted fetchOrder failure', err)
+      })
     },
     handleAudit(index, row) {},
-    handleSizeChange() {},
-    handleCurrentChange() {}
+    handleSizeChange(val) {
+      console.log('order.vue methods handleSizeChange', val, this.pageIndex)
+      this.pageSize = val
+      const dataTemp = {
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchOrder(dataTemp).then(res => {
+        console.log('order.vue handleSizeChange fetchOrder success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('order.vue handleSizeChange fetchOrder failure', err)
+      })
+    },
+    handleCurrentChange(val) {
+      console.log('order.vue methods handleCurrentChange', val)
+      this.pageIndex = val
+      const dataTemp = {
+        status: this.conditionForm.status === '-1' ? '' : this.conditionForm.status,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      fetchOrder(dataTemp).then(res => {
+        console.log('order.vue handleSizeChange fetchOrder success', res)
+        this.tableData.length = 0
+        this.tableData.push(...res.data.data)
+        this.total = res.data.total
+      }).catch(err => {
+        console.log('order.vue handleSizeChange fetchOrder failure', err)
+      })
+    }
   }
 }
 </script>
