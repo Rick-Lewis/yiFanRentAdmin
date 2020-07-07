@@ -11,7 +11,7 @@
         <el-form ref="form" :model="form" :rules="formRules" label-width="100px">
           <div>
             <el-form-item label="申请人" prop="applicant">
-              <el-select v-model="form.applicant" placeholder="请选择" style="width: 100%;">
+              <el-select v-model="form.applicant" placeholder="请选择" style="width: 100%;" @change="handleSelectChange">
                 <el-option
                   v-for="item in form.options"
                   :key="item.value"
@@ -118,7 +118,8 @@ export default {
       console.log('application-filled.vue mounted fetchStaffList success', res)
       this.form.options.push(...res.data.data.map(item => ({
         value: item.id,
-        label: item.name
+        label: item.name,
+        telephone: item.telephone
       })))
     }).catch(err => {
       console.log('application-filled.vue mounted fetchStaffList failure', err)
@@ -153,6 +154,10 @@ export default {
     }
   },
   methods: {
+    handleSelectChange(data) {
+      console.log('application-filled.vue methods handleSelectChange', data)
+      this.form.applicant_tel = data.telephone
+    },
     toLastView(visitedViews, view) {
       const latestView = visitedViews.slice(-1)[0]
       if (latestView) {

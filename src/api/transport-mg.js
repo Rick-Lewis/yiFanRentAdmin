@@ -1,6 +1,18 @@
 import request from '@/utils/request'
 
 // 租车订单
+export function fetchOrderDetail(data) {
+  return request({
+    url: `/officialcars/order/${data.order_no}`,
+    method: 'get'
+  })
+}
+export function cancelOrder(data) {
+  return request({
+    url: `/officialcars/order/cancel/${data.order_no}`,
+    method: 'get'
+  })
+}
 export function fetchOrderStatus(data) {
   return request({
     url: `/officialcars/status/order`,
