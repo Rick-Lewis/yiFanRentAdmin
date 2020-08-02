@@ -121,6 +121,15 @@ export default {
   },
   mounted() {},
   methods: {
+    refreshView() {
+      // In order to make the cached page re-rendered
+      this.$store.dispatch('tagsView/delAllCachedViews', { name: 'Order' })
+      this.$nextTick(() => {
+        this.$router.replace({
+          path: '/redirect/transport-mg/order'
+        })
+      })
+    },
     toLastView(visitedViews, view) {
       const latestView = visitedViews.slice(-1)[0]
       if (latestView) {
@@ -161,7 +170,9 @@ export default {
           message: res.message,
           type: 'success'
         })
+        this.$router.push({ path: '/transport-mg/order' })
         this.closeSelectedTag()
+        this.refreshView()
       }).catch(err => {
         console.log('pre-order-detail.vue methods create failure', err)
       })

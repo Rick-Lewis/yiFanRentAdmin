@@ -148,7 +148,9 @@ export default {
     }
   },
   computed: {},
-  created() {},
+  created() {
+    console.log('application.vue created', this.$route)
+  },
   mounted() {
     let dataTemp = {
       pageIndex: 1,

@@ -22,6 +22,7 @@
       <el-table :data="tableData" border style="width: 100%">
         <el-table-column prop="name" label="姓名" align="center" />
         <el-table-column prop="code" label="员工编号" align="center" />
+        <el-table-column prop="username" label="系统账号" align="center" />
         <el-table-column prop="department_name" label="所在部门" align="center" />
         <el-table-column prop="is_admin" label="是否管理员" align="center">
           <template slot-scope="scope"><div>{{ scope.row.is_admin ? '是' : '否' }}</div></template>
@@ -107,6 +108,7 @@ export default {
       },
       departmentList: [],
       additionForm: {
+        status: '1',
         department_id: '',
         name: '',
         code: '',
@@ -206,6 +208,7 @@ export default {
     },
     handleAddCancel() {
       this.additionForm = {
+        status: '1',
         department_id: '',
         name: '',
         code: '',

@@ -24,7 +24,7 @@
           <div style="margin-left: 5px;">{{ userInfo && userInfo.name }}<i class="el-icon-caret-bottom" /></div>
         </div>
         <el-dropdown-menu slot="dropdown">
-          <router-link to="/profile/index">
+          <!-- <router-link to="/profile/index">
             <el-dropdown-item>个人中心</el-dropdown-item>
           </router-link>
           <router-link to="/">
@@ -32,7 +32,7 @@
           </router-link>
           <a target="_blank" href="https://github.com/Rick-Lewis/yiFanRentAdmin">
             <el-dropdown-item>Github</el-dropdown-item>
-          </a>
+          </a> -->
           <el-dropdown-item divided @click.native="logout">
             <span style="display:block;">退出登录</span>
           </el-dropdown-item>

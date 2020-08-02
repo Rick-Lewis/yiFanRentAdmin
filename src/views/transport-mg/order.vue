@@ -7,12 +7,12 @@
             <el-radio v-for="(item, index) in conditionForm.statusList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="订单状态">
+        <el-form-item label="有无司机">
           <el-radio-group v-model="conditionForm.with_driver" size="small" @change="(val) => handleRadioGroupChange(val, 'with_driver')">
             <el-radio v-for="(item, index) in conditionForm.withDriverList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="用车事由">
+        <el-form-item label="时间查询">
           <el-date-picker
             v-model="conditionForm.duration"
             type="daterange"
@@ -287,10 +287,10 @@ export default {
         pageIndex: 1,
         pageSize: this.pageSize
       }
-      if (this.conditionForm.status !== -9) {
+      if (this.conditionForm.status !== '-9') {
         dataTemp['status'] = this.conditionForm.status
       }
-      if (this.conditionForm.with_driver !== -9) {
+      if (this.conditionForm.with_driver !== '-9') {
         dataTemp['with_driver'] = this.conditionForm.with_driver
       }
       if (this.conditionForm.duration.length > 0) {

@@ -3,7 +3,7 @@
     <el-steps :active="0" finish-status="success" align-center>
       <el-step title="填写用车申请" />
       <el-step title="进行审批" />
-      <el-step title="生成订单" />
+      <el-step title="下单租车" />
     </el-steps>
     <div class="content">
       <div class="header">申请信息</div>
@@ -184,16 +184,15 @@ export default {
         }
       })
     },
-    // refreshView() {
-    //   // In order to make the cached page re-rendered
-    //   this.$store.dispatch('tagsView/delAllCachedViews', this.$route)
-    //   const { fullPath } = this.$route
-    //   this.$nextTick(() => {
-    //     this.$router.replace({
-    //       path: '/redirect' + fullPath
-    //     })
-    //   })
-    // },
+    refreshView() {
+      // In order to make the cached page re-rendered
+      this.$store.dispatch('tagsView/delAllCachedViews', { name: 'Application' })
+      this.$nextTick(() => {
+        this.$router.replace({
+          path: '/redirect/transport-mg/application'
+        })
+      })
+    },
     back() {
       if (this.$route.query.noGoBack) {
         this.$router.push({ path: '/dashboard' })
@@ -223,7 +222,7 @@ export default {
               })
               this.closeSelectedTag()
               // this.$router.push({ path: '/transport-mg/application' })
-              // this.refreshView()
+              this.refreshView()
             }).catch(err => {
               console.log('application-filled.vue methods onSubmit resubmit failure', err)
             })
@@ -237,7 +236,7 @@ export default {
               })
               this.closeSelectedTag()
               // this.$router.push({ path: '/transport-mg/application' })
-              // this.refreshView()
+              this.refreshView()
             }).catch(err => {
               console.log('application-filled.vue methods onSubmit addApplication failure', err)
             })
