@@ -265,6 +265,14 @@ export default {
       })
     },
     handleAddtionClick() {
+      this.additionForm = {
+        status: '1',
+        department_id: '',
+        name: '',
+        code: '',
+        telephone: '',
+        username: ''
+      }
       this.dialogConfig.dialogFormVisible = true
       const dataTemp = {
         pageIndex: 1,

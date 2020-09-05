@@ -65,7 +65,9 @@ service.interceptors.response.use(
         //     location.reload()
         //   })
         // })
-        location.reload()
+        store.dispatch('user/resetToken').then(() => {
+          location.reload()
+        })
       }
       return Promise.reject(new Error(res.message || 'Error'))
     } else {

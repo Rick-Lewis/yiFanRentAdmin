@@ -176,6 +176,8 @@ export default {
       console.log('application.vue mounted fetchStatus failure', err)
     })
     dataTemp = {
+      sortField: 'time_create',
+      sortOrder: 'desc',
       pageIndex: this.pageIndex,
       pageSize: this.pageSize
     }

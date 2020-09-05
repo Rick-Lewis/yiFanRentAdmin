@@ -65,7 +65,7 @@
         <el-pagination background :page-sizes="[5, 8, 10]" :page-size="pageSize" layout="total, prev, pager, next, sizes, jumper" :total="total" :current-page="pageIndex" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </div>
-    <el-dialog title="订单详情" :visible.sync="dialogVisible" class="dialog-content">
+    <el-dialog title="订单详情" :visible.sync="dialogVisible" fullscreen class="dialog-content">
       <div class="item-content">
         <div class="content-container">
           <div class="left">
@@ -140,7 +140,7 @@
               </el-alert>
             </div>
             <div style="padding: 20px 0;">
-              <el-collapse v-model="activeNames">
+              <!-- <el-collapse v-model="activeNames">
                 <el-collapse-item name="1">
                   <template slot="title"><span style="padding-left: 20px;">2020年第一次招商会议用车</span></template>
                   <div style="padding-left: 10px;">
@@ -148,7 +148,13 @@
                     <div>在界面中一致：所有的元素和结构需保持一致，比如：设计样式、图标和文本、元素的位置等。</div>
                   </div>
                 </el-collapse-item>
-              </el-collapse>
+              </el-collapse> -->
+              <el-table :data="orderDetail && orderDetail.order && orderDetail.order.orderOperations" border style="width: 100%">
+                <el-table-column prop="action" label="操作类型" align="center" />
+                <el-table-column prop="operate_time" label="操作时间" align="center" />
+                <el-table-column prop="operator_name" label="操作人" align="center" />
+                <el-table-column prop="describe" label="描述" align="center" width="300px" />
+              </el-table>
             </div>
           </div>
         </div>
