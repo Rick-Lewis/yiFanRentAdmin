@@ -73,15 +73,15 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
-    children: [
-      {
-        path: 'dashboard',
-        component: () => import('@/views/welcome/index'),
-        name: 'Dashboard',
-        meta: { title: '首页', icon: 'dashboard', affix: true }
-      }
-    ]
+    redirect: '/transport-mg/application'
+    // children: [
+    //   {
+    //     path: 'dashboard',
+    //     component: () => import('@/views/welcome/index'),
+    //     name: 'Dashboard',
+    //     meta: { title: '首页', icon: 'dashboard', affix: true }
+    //   }
+    // ]
   },
   {
     path: '/documentation',
@@ -149,7 +149,8 @@ export const asyncRoutes = [
         name: 'Application',
         meta: {
           title: '用车申请',
-          roles: ['admin'] // or you can only set roles in sub nav
+          roles: ['admin'], // or you can only set roles in sub nav
+          affix: true
         }
       },
       {
