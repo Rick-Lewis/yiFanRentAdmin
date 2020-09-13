@@ -96,7 +96,7 @@
   </div>
 </template>
 <script>
-import { fetchStaffList, addStaff, fetchDepartmentList, getStaffById } from '@/api/org-mg'
+import { fetchStaffList, addStaff, fetchDepartmentList, getStaffById, judge } from '@/api/org-mg'
 import { Message } from 'element-ui'
 export default {
   name: 'Staff',
@@ -120,7 +120,22 @@ export default {
         name: [{ required: true, message: '请输入员工姓名', trigger: ['blur'] }],
         code: [{ required: true, message: '请输入员工编号', trigger: ['blur'] }],
         telephone: [{ required: true, message: '请输入员工手机号', trigger: ['blur'] }],
-        username: [{ required: true, message: '请输入系统账号', trigger: ['blur'] }]
+        username: [{ required: true, trigger: ['blur'], validator: (rule, value, callback) => {
+          if (!value) {
+            callback('请输入系统账号')
+            return
+          }
+          judge({ username: value }).then(res => {
+            if (res.code === 1) {
+              callback('账号已存在')
+            } else {
+              callback()
+            }
+          }, err => {
+            console.log('judge', err)
+            callback()
+          })
+        } }]
       },
       dialogConfig: {
         dialogFormVisible: false,
@@ -274,6 +289,8 @@ export default {
         username: ''
       }
       this.dialogConfig.dialogFormVisible = true
+      this.dialogConfig.currentStatus = 'add'
+      this.dialogConfig.accountEditable = true
       const dataTemp = {
         pageIndex: 1,
         pageSize: 1000

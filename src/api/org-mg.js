@@ -1,6 +1,14 @@
 import request from '@/utils/request'
 
 // 人员管理
+export function judge(data) {
+  return request({
+    url: `/officialcars/user/judge`,
+    method: 'get',
+    params: data
+  })
+}
+// 人员管理
 export function getStaffById(data) {
   return request({
     url: `/officialcars/user/${data.id}`,

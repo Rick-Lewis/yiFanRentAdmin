@@ -303,6 +303,10 @@ export default {
       })
     },
     handleAddtionClick() {
+      this.addtionForm = {
+        parent: '',
+        name: ''
+      }
       this.dialogConfig.currentStatus = 'add'
       this.dialogConfig.dialogFormVisible = true
     },

@@ -322,6 +322,18 @@ export default {
       })
     },
     handleAddtionClick() {
+      this.additionForm = {
+        name: '',
+        note: '',
+        invoice_title: '',
+        tax_no: '',
+        user: {
+          name: '',
+          username: '',
+          telephone: '',
+          password: ''
+        }
+      }
       this.dialogConfig.currentStatus = 'add'
       this.dialogConfig.dialogFormVisible = true
     },
