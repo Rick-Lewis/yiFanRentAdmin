@@ -67,9 +67,9 @@
             <el-collapse v-model="item.activeNames" :accordion="true" @change="handleClapChange">
               <el-collapse-item title="" name="1">
                 <el-steps :active="item.active" finish-status="success" align-center>
-                  <el-step title="待领导审批" />
-                  <el-step title="待公车办审批" />
-                  <el-step title="审批完成" />
+                  <el-step title="待审批" />
+                  <el-step title="审批中" />
+                  <el-step title="审批通过" />
                 </el-steps>
               </el-collapse-item>
             </el-collapse>
@@ -83,7 +83,10 @@
     </div>
     <el-dialog title="申请详情" :visible.sync="dialogVisible" class="dialog-content">
       <div class="card-container">
-        <div class="card-header">审批编号：{{ activeItemDetail.serialno }}</div>
+        <div class="card-header">
+          <span>审批编号：{{ activeItemDetail.serialno }}</span>
+          <span v-if="activeItemDetail.next_checker">（下一个审批人:{{ activeItemDetail.next_checker.checker }}）</span>
+        </div>
         <div class="card-content">
           <div class="col-container">
             <div>
@@ -110,13 +113,18 @@
         </div>
         <div class="card-footer" style="margin-top: 20px;">
           <el-steps :active="activeItemDetail.active" finish-status="success" align-center>
-            <el-step title="待领导审批" />
-            <el-step title="待公车办审批" />
-            <el-step title="审批完成" />
+            <el-step title="待审批" />
+            <el-step title="审批中" />
+            <el-step title="审批通过" />
           </el-steps>
         </div>
       </div>
-      <div v-if="tableData.length === 0" class="el-table__empty-block"><span class="el-table__empty-text">暂无数据</span></div>
+      <el-table :data="activeItemDetail.checkFlowList" border style="width: 100%">
+        <el-table-column prop="index" label="审核步骤" align="center" />
+        <el-table-column prop="name" label="审核名称" align="center" />
+        <el-table-column prop="checker" label="审核人" align="center" />
+        <el-table-column prop="enterprise_name" label="公司名称" align="center" />
+      </el-table>
     </el-dialog>
   </div>
 </template>
@@ -235,7 +243,7 @@ export default {
     },
     handleViewDetail(item) {
       console.log('application.vue handleViewDetail', item)
-      fetchApplicationDetail({ id: item.id }).then(res => {
+      fetchApplicationDetail({ serialno: item.serialno }).then(res => {
         console.log('application.vue mounted fetchApplicationDetail success', res)
         let temp = 0
         switch (res.data.status) {
@@ -260,7 +268,8 @@ export default {
             break
         }
         this.activeItemDetail = Object.assign({}, res.data, {
-          active: temp
+          active: temp,
+          next_checker: res.data.checkFlowList.find(item => item.check_user === res.data.next_checker)
         })
         this.dialogVisible = true
       }).catch(err => {
@@ -271,7 +280,27 @@ export default {
       if (JSON.stringify(item) === '{}') {
         return ''
       }
-      const result = this.conditionForm.statusList.find(i => i.label === (item.status + ''))
+      let temp = item.status
+      switch (item.status) {
+        case 0: // 待审批
+          temp = 0
+          break
+        case 1: // 审批中
+          if (item.is_check === 1) {
+            temp = 0
+          } else if (item.is_check === 2 && item.is_confirm === 1) {
+            temp = 2
+          } else if (item.is_check === 2) {
+            temp = 1
+          }
+          break
+        case 2: // 已通过
+          break
+        case -1: // 已撤销
+        case -2: // 已驳回
+          break
+      }
+      const result = this.conditionForm.statusList.find(i => i.label === (temp + ''))
       return result.value
     },
     // handleEditClick(item) {

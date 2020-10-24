@@ -77,9 +77,9 @@
         </div>
         <div class="card-footer" style="margin-top: 20px;">
           <el-steps :active="activeItemDetail.active" finish-status="success" align-center>
-            <el-step title="待领导审批" />
-            <el-step title="待公车办审批" />
-            <el-step title="审批完成" />
+            <el-step title="待审批" />
+            <el-step title="审批中" />
+            <el-step title="审批通过" />
           </el-steps>
         </div>
         <div v-if="dialogConfig.currentStatus === 'audit'" style="margin-top: 30px;">

@@ -146,7 +146,7 @@ export function addApplication(data) {
 }
 export function fetchApplicationDetail(data) {
   return request({
-    url: `/officialcars/application/${data.id}`,
+    url: `/officialcars/application/serialno/${data.serialno}`,
     method: 'get'
   })
 }

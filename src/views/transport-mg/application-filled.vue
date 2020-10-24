@@ -229,11 +229,19 @@ export default {
           } else {
             addApplication(tempData).then(res => {
               console.log('application-filled.vue methods onSubmit addApplication success', res)
-              Message({
-                message: res.message,
-                type: 'success',
-                duration: 5 * 1000
-              })
+              if (res.code !== 0) {
+                Message({
+                  message: res.message,
+                  type: 'warning',
+                  duration: 5 * 1000
+                })
+              } else {
+                Message({
+                  message: res.message,
+                  type: 'success',
+                  duration: 5 * 1000
+                })
+              }
               this.closeSelectedTag()
               // this.$router.push({ path: '/transport-mg/application' })
               this.refreshView()

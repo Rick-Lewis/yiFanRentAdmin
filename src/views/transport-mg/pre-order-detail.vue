@@ -153,6 +153,7 @@ export default {
       this.$store.dispatch('tagsView/delView', view).then(({ visitedViews }) => {
         if (this.isActive(view)) {
           this.toLastView(visitedViews, view)
+          this.refreshView()
         }
       })
     },
@@ -170,9 +171,7 @@ export default {
           message: res.message,
           type: 'success'
         })
-        this.$router.push({ path: '/transport-mg/order' })
         this.closeSelectedTag()
-        this.refreshView()
       }).catch(err => {
         console.log('pre-order-detail.vue methods create failure', err)
       })

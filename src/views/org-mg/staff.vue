@@ -121,20 +121,21 @@ export default {
         code: [{ required: true, message: '请输入员工编号', trigger: ['blur'] }],
         telephone: [{ required: true, message: '请输入员工手机号', trigger: ['blur'] }],
         username: [{ required: true, trigger: ['blur'], validator: (rule, value, callback) => {
-          if (!value) {
+          if (this.dialogConfig.accountEditable && !value) {
             callback('请输入系统账号')
             return
           }
-          judge({ username: value }).then(res => {
-            if (res.code === 1) {
-              callback('账号已存在')
-            } else {
-              callback()
-            }
-          }, err => {
-            console.log('judge', err)
-            callback()
-          })
+          if (this.dialogConfig.accountEditable && value) {
+            judge({ username: value }).then(res => {
+              if (res.code === 1) {
+                callback('账号已存在')
+                return
+              }
+            }, err => {
+              console.log('judge', err)
+            })
+          }
+          callback()
         } }]
       },
       dialogConfig: {
@@ -240,22 +241,22 @@ export default {
         if (valid) {
           const result = Object.assign({}, this.additionForm)
           if (this.dialogConfig.currentStatus === 'edit') {
-            this.additionForm.department_name = this.departmentList.find(item => item.id === this.additionForm.department_id).name
+            result.department_name = this.departmentList.find(item => item.id === this.additionForm.department_id).name
             if (!this.dialogConfig.accountEditable) {
               delete result.username
-            } else if (this.additionForm.username) {
-              this.additionForm.password = '123456'
+            } else if (result.username) {
+              result.password = '123456'
             }
           } else {
-            if (this.additionForm.username) {
-              this.additionForm.password = '123456'
+            if (result.username) {
+              result.password = '123456'
             }
           }
-          addStaff(this.additionForm).then(res => {
+          addStaff(result).then(res => {
             console.log('staff.vue mounted addStaff success', res)
             this.dialogConfig.accountEditable = true
             if (this.dialogConfig.currentStatus === 'edit') {
-              this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], this.additionForm))
+              this.tableData.splice(this.currentIndex, 1, Object.assign({}, this.tableData[this.currentIndex], result))
             } else {
               this.refreshView()
             }

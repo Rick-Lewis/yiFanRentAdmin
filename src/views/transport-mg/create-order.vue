@@ -43,6 +43,7 @@
       <template>
         <el-table
           :data="tableData"
+          empty-text="暂无车辆信息，请先确定取还门店"
           style="width: 100%"
         >
           <el-table-column type="expand">
