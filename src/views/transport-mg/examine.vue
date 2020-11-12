@@ -52,34 +52,29 @@
       <div class="card-container">
         <div class="card-header">审批编号：{{ activeItemDetail.serialno }}</div>
         <div class="card-content">
-          <div class="col-container">
+          <div style="flex: 8;">
             <div>
-              <div style="font-size: 20px;">{{ activeItemDetail.reason }}</div>
-              <div>{{ activeItemDetail.applicant_name }} 于 {{ activeItemDetail.time_create }} 申请</div>
+              <div style="font-size: 18px;">{{ activeItemDetail.reason }}</div>
+              <div style="color: #9e9e9e;">{{ activeItemDetail.applicant_name }} 于 {{ activeItemDetail.time_create }} 申请</div>
             </div>
-            <div>
-              <div>往：古丈县县政府大楼-吉首市高铁站</div>
-              <div style="margin-top: 5px;">返：吉首市高铁站-古丈县宾馆</div>
-            </div>
-            <div>备注：{{ activeItemDetail.note }}</div>
+            <div style="color: #9e9e9e;">行车路线：{{ activeItemDetail.lines }}</div>
           </div>
           <el-divider direction="vertical" />
-          <div>
+          <div style="flex: 6">备注：{{ activeItemDetail.note }}</div>
+          <el-divider direction="vertical" />
+          <div style="flex: 6">
             <div>
               <span>随车人员：</span>
-              <el-tag v-for="(ite, i) in (activeItemDetail.member_name && activeItemDetail.member_name.split(','))" :key="i" size="small">{{ ite }}</el-tag>
+              <el-tag v-for="(ite, i) in (activeItemDetail.member_name && activeItemDetail.member_name.split(','))" :key="i" size="small" style="margin-right: 5px;">{{ ite }}</el-tag>
             </div>
             <div style="margin-top: 16px;">司机：{{ activeItemDetail.with_driver === 0 ? '自备' : '准备中' }}</div>
           </div>
           <el-divider direction="vertical" />
-          <div>{{ getValueByStatus(activeItemDetail) }}</div>
-          <div />
+          <div style="flex: 4; text-align: center;">{{ getValueByStatus(activeItemDetail) }}</div>
         </div>
         <div class="card-footer" style="margin-top: 20px;">
           <el-steps :active="activeItemDetail.active" finish-status="success" align-center>
-            <el-step title="待审批" />
-            <el-step title="审批中" />
-            <el-step title="审批通过" />
+            <el-step v-for="(item, index) in activeItemDetail.checkFlowList" :key="index" :title="item.name" />
           </el-steps>
         </div>
         <div v-if="dialogConfig.currentStatus === 'audit'" style="margin-top: 30px;">
@@ -263,7 +258,7 @@ export default {
     handleViewDetail(item, type) {
       console.log('examine.vue handleViewDetail', item)
       this.dialogConfig.currentStatus = type
-      fetchApplicationDetail({ id: item.id }).then(res => {
+      fetchApplicationDetail({ serialno: item.serialno }).then(res => {
         console.log('examine.vue mounted fetchApplicationDetail success', res)
         let temp = 0
         switch (res.data.status) {
@@ -271,16 +266,17 @@ export default {
             temp = 0
             break
           case 1: // 审批中
-            if (item.is_check === 1) {
-              temp = 0
-            } else if (res.data.is_check === 2 && res.data.is_confirm === 1) {
-              temp = 3
-            } else if (res.data.is_check === 2) {
-              temp = 1
-            }
+            temp = res.data.checkFlowList.findIndex(item => item.check_user === res.data.next_checker)
+            // if (item.is_check === 1) {
+            //   temp = 0
+            // } else if (res.data.is_check === 2 && res.data.is_confirm === 1) {
+            //   temp = 3
+            // } else if (res.data.is_check === 2) {
+            //   temp = 1
+            // }
             break
           case 2: // 已通过
-            temp = 3
+            temp = res.data.checkFlowList.length
             break
           case -1: // 已撤销
           case -2: // 已驳回
@@ -403,7 +399,8 @@ export default {
       margin-top: 10px;
       .card-container{
         background-color: #ffffff;
-        padding-top: 16px;
+        font-size: 14px;
+        // padding-top: 16px;
         &:not(:last-child){
           margin-bottom: 16px;
         }
@@ -416,23 +413,7 @@ export default {
           padding: 16px 0 16px 22px;
           justify-content: space-between;
           align-items: center;
-          // border-bottom: 1px solid #DCDFE6;
-          .col-container{
-            & > div:first-child{
-              display: flex;
-              align-items: center;
-              & > div:last-child{
-                color: #9e9e9e;
-                margin-left: 16px;
-              }
-            }
-            & > div:nth-child(2){
-              padding: 16px 0;
-            }
-            & > div:last-child{
-              color: #9e9e9e;
-            }
-          }
+          line-height: 1.5;
           .el-divider--vertical{
             height: 80px;
           }

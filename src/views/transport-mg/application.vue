@@ -8,6 +8,9 @@
           </el-radio-group>
         </el-form-item>
         <div class="other-container">
+          <el-form-item label="审批编号">
+            <el-input v-model="conditionForm.serialno" placeholder="请输入审批编号" />
+          </el-form-item>
           <el-form-item label="用车事由">
             <el-input v-model="conditionForm.reason" placeholder="请输入关键字搜索" />
           </el-form-item>
@@ -33,29 +36,30 @@
         <div v-for="(item, index) in tableData" :key="index" class="card-container">
           <div class="card-header">审批编号：{{ item.serialno }}</div>
           <div class="card-content">
-            <div class="col-container">
+            <div style="flex: 6;">
               <div>
-                <div style="font-size: 20px;">{{ item.reason }}</div>
-                <div>{{ item.applicant_name }} 于 {{ item.time_create }} 申请</div>
+                <div style="font-size: 18px;">{{ item.reason }}</div>
+                <div style="color: #9e9e9e;">{{ item.applicant_name }} 于 {{ item.time_create }} 申请</div>
               </div>
               <div>
-                <div>行车路线：{{ item.lines }}</div>
+                <div style="color: #9e9e9e;">行车路线：{{ item.lines }}</div>
                 <!-- <div style="margin-top: 5px;">返：吉首市高铁站-古丈县宾馆</div> -->
               </div>
-              <div>备注：{{ item.note }}</div>
             </div>
             <el-divider direction="vertical" />
-            <div style="flex-basis: 400px; padding-left: 30px">
+            <div style="flex: 6;">备注：{{ item.note }}</div>
+            <el-divider direction="vertical" />
+            <div style="flex: 6;">
               <div>
                 <span>随车人员：</span>
-                <el-tag v-for="(ite, i) in (item.member_name && item.member_name.split(','))" :key="i" size="small">{{ ite }}</el-tag>
+                <el-tag v-for="(ite, i) in (item.member_name && item.member_name.split(','))" :key="i" size="small" style="margin-right: 5px;">{{ ite }}</el-tag>
               </div>
               <div style="margin-top: 16px;">司机：{{ item.with_driver === 0 ? '自备' : '准备中' }}</div>
             </div>
             <el-divider direction="vertical" />
-            <div class="card-item-container">{{ getValueByStatus(item) }}</div>
+            <div style="flex: 2;" class="card-item-container">{{ getValueByStatus(item) }}</div>
             <el-divider direction="vertical" />
-            <div class="card-item-container">
+            <div style="flex: 4;" class="card-item-container">
               <div v-if="item.status === 0 || item.status === 1"><el-link type="primary" @click="handleOptClick(item)">撤销</el-link></div>
               <div v-if="item.status === 2 && !item.orderno" style="margin-top: 10px;"><el-link type="primary" @click="handleOptClick(item)">去下单</el-link></div>
               <div v-if="item.status === -1 || item.status === -2" style="margin-top: 10px;"><el-link type="primary" @click="handleOptClick(item)">编辑</el-link></div>
@@ -82,49 +86,44 @@
       </div>
     </div>
     <el-dialog title="申请详情" :visible.sync="dialogVisible" class="dialog-content">
-      <div class="card-container">
+      <div class="card-container" style="padding-top: 0;">
         <div class="card-header">
           <span>审批编号：{{ activeItemDetail.serialno }}</span>
           <span v-if="activeItemDetail.next_checker">（下一个审批人:{{ activeItemDetail.next_checker.checker }}）</span>
         </div>
-        <div class="card-content">
-          <div class="col-container">
+        <div class="card-content" style="padding-top: 10px;">
+          <div style="flex: 8;">
             <div>
-              <div style="font-size: 20px;">{{ activeItemDetail.reason }}</div>
-              <div>{{ activeItemDetail.applicant_name }} 于 {{ activeItemDetail.time_create }} 申请</div>
+              <div style="font-size: 18px;">{{ activeItemDetail.reason }}</div>
+              <div style="color: #9e9e9e;">{{ activeItemDetail.applicant_name }} 于 {{ activeItemDetail.time_create }} 申请</div>
             </div>
-            <div>
-              <div>往：古丈县县政府大楼-吉首市高铁站</div>
-              <div style="margin-top: 5px;">返：吉首市高铁站-古丈县宾馆</div>
-            </div>
-            <div>备注：{{ activeItemDetail.note }}</div>
+            <div style="color: #9e9e9e;">行车路线：{{ activeItemDetail.lines }}</div>
           </div>
           <el-divider direction="vertical" />
-          <div style="padding: 0 30px;">
+          <div style="flex: 6;">备注：{{ activeItemDetail.note }}</div>
+          <el-divider direction="vertical" />
+          <div style="flex: 6;">
             <div>
               <span>随车人员：</span>
-              <el-tag v-for="(ite, i) in (activeItemDetail.member_name && activeItemDetail.member_name.split(','))" :key="i" size="small">{{ ite }}</el-tag>
+              <el-tag v-for="(ite, i) in (activeItemDetail.member_name && activeItemDetail.member_name.split(','))" :key="i" size="small" style="margin-right: 5px;">{{ ite }}</el-tag>
             </div>
             <div style="margin-top: 16px;">司机：{{ activeItemDetail.with_driver === 0 ? '自备' : '准备中' }}</div>
           </div>
           <el-divider direction="vertical" />
-          <div class="card-item-container">{{ getValueByStatus(activeItemDetail) }}</div>
-          <div />
+          <div class="card-item-container" style="flex: 4;">{{ getValueByStatus(activeItemDetail) }}</div>
         </div>
         <div class="card-footer" style="margin-top: 20px;">
           <el-steps :active="activeItemDetail.active" finish-status="success" align-center>
-            <el-step title="待审批" />
-            <el-step title="审批中" />
-            <el-step title="审批通过" />
+            <el-step v-for="(item, index) in activeItemDetail.checkFlowList" :key="index" :title="item.name" />
           </el-steps>
         </div>
       </div>
-      <el-table :data="activeItemDetail.checkFlowList" border style="width: 100%">
+      <!-- <el-table :data="activeItemDetail.checkFlowList" border style="width: 100%">
         <el-table-column prop="index" label="审核步骤" align="center" />
         <el-table-column prop="name" label="审核名称" align="center" />
         <el-table-column prop="checker" label="审核人" align="center" />
         <el-table-column prop="enterprise_name" label="公司名称" align="center" />
-      </el-table>
+      </el-table> -->
     </el-dialog>
   </div>
 </template>
@@ -147,7 +146,8 @@ export default {
         status: '-9',
         reason: '',
         options: [],
-        member: ''
+        member: '',
+        serialno: ''
       },
       tableData: [],
       pageIndex: 1,
@@ -198,13 +198,14 @@ export default {
             temp = 0
             break
           case 1: // 审批中
-            if (item.is_check === 1) {
-              temp = 0
-            } else if (item.is_check === 2 && item.is_confirm === 1) {
-              temp = 3
-            } else if (item.is_check === 2) {
-              temp = 1
-            }
+            temp = 1
+            // if (item.is_check === 1) {
+            //   temp = 0
+            // } else if (item.is_check === 2 && item.is_confirm === 1) {
+            //   temp = 3
+            // } else if (item.is_check === 2) {
+            //   temp = 1
+            // }
             break
           case 2: // 已通过
             temp = 3
@@ -251,16 +252,17 @@ export default {
             temp = 0
             break
           case 1: // 审批中
-            if (item.is_check === 1) {
-              temp = 0
-            } else if (res.data.is_check === 2 && res.data.is_confirm === 1) {
-              temp = 3
-            } else if (res.data.is_check === 2) {
-              temp = 1
-            }
+            temp = res.data.checkFlowList.findIndex(item => item.check_user === res.data.next_checker)
+            // if (item.is_check === 1) {
+            //   temp = 0
+            // } else if (res.data.is_check === 2 && res.data.is_confirm === 1) {
+            //   temp = 3
+            // } else if (res.data.is_check === 2) {
+            //   temp = 1
+            // }
             break
           case 2: // 已通过
-            temp = 3
+            temp = res.data.checkFlowList.length
             break
           case -1: // 已撤销
           case -2: // 已驳回
@@ -286,13 +288,14 @@ export default {
           temp = 0
           break
         case 1: // 审批中
-          if (item.is_check === 1) {
-            temp = 0
-          } else if (item.is_check === 2 && item.is_confirm === 1) {
-            temp = 2
-          } else if (item.is_check === 2) {
-            temp = 1
-          }
+          temp = 1
+          // if (item.is_check === 1) {
+          //   temp = 0
+          // } else if (item.is_check === 2 && item.is_confirm === 1) {
+          //   temp = 2
+          // } else if (item.is_check === 2) {
+          //   temp = 1
+          // }
           break
         case 2: // 已通过
           break
@@ -360,6 +363,7 @@ export default {
       const dataTemp = {
         reason: this.conditionForm.reason,
         member_name: this.conditionForm.member.map(item => item.label).join(','),
+        serialno: this.conditionForm.serialno,
         status: this.status === '-9' ? '' : this.status,
         pageIndex: 1,
         pageSize: this.pageSize
@@ -401,16 +405,17 @@ export default {
               temp = 0
               break
             case 1: // 审批中
-              if (item.is_check === 1) {
-                temp = 0
-              } else if (item.is_check === 2 && item.is_confirm === 1) {
-                temp = 3
-              } else if (item.is_check === 2) {
-                temp = 1
-              }
+              res.data.checkFlowList.findIndex(item => item.check_user === res.data.next_checker)
+              // if (item.is_check === 1) {
+              //   temp = 0
+              // } else if (item.is_check === 2 && item.is_confirm === 1) {
+              //   temp = 3
+              // } else if (item.is_check === 2) {
+              //   temp = 1
+              // }
               break
             case 2: // 已通过
-              temp = 3
+              temp = res.data.checkFlowList.length
               break
             case -1: // 已撤销
             case -2: // 已驳回
@@ -447,16 +452,17 @@ export default {
               temp = 0
               break
             case 1: // 审批中
-              if (item.is_check === 1) {
-                temp = 0
-              } else if (item.is_check === 2 && item.is_confirm === 1) {
-                temp = 3
-              } else if (item.is_check === 2) {
-                temp = 1
-              }
+              res.data.checkFlowList.findIndex(item => item.check_user === res.data.next_checker)
+              // if (item.is_check === 1) {
+              //   temp = 0
+              // } else if (item.is_check === 2 && item.is_confirm === 1) {
+              //   temp = 3
+              // } else if (item.is_check === 2) {
+              //   temp = 1
+              // }
               break
             case 2: // 已通过
-              temp = 3
+              temp = res.data.checkFlowList.length
               break
             case -1: // 已撤销
             case -2: // 已驳回
@@ -483,6 +489,7 @@ export default {
   min-height: calc(100vh - 84px);
   background-color: #eef0f3;
   padding: 16px;
+  font-size: 14px;
   .header{
     background-color: #ffffff;
     padding-top: 22px;
@@ -510,27 +517,11 @@ export default {
       }
       .card-content{
         display: flex;
-        padding: 16px 0 16px 22px;
+        padding: 0 22px 10px 22px;
         justify-content: flex-start;
         align-items: center;
+        line-height: 1.5;
         // border-bottom: 1px solid #DCDFE6;
-        .col-container{
-          flex-basis: 400px;
-          & > div:first-child{
-            display: flex;
-            align-items: center;
-            & > div:last-child{
-              color: #9e9e9e;
-              margin-left: 16px;
-            }
-          }
-          & > div:nth-child(2){
-            padding: 16px 0;
-          }
-          & > div:last-child{
-            color: #9e9e9e;
-          }
-        }
         .el-divider--vertical{
           height: 80px;
         }
