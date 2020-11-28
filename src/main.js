@@ -19,6 +19,10 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
+import moment from 'moment'
+import _ from 'lodash'
+Vue.prototype.$moment = moment
+Vue.prototype._ = _
 //
 /**
  * If you don't want to use mock-server

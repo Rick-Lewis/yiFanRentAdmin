@@ -197,6 +197,7 @@ export default {
       if (this.$route.query.noGoBack) {
         this.$router.push({ path: '/dashboard' })
       } else {
+        this.closeSelectedTag()
         this.$router.go(-1)
       }
     },
@@ -221,7 +222,6 @@ export default {
                 duration: 5 * 1000
               })
               this.closeSelectedTag()
-              // this.$router.push({ path: '/transport-mg/application' })
               this.refreshView()
             }).catch(err => {
               console.log('application-filled.vue methods onSubmit resubmit failure', err)

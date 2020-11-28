@@ -275,6 +275,57 @@ export const asyncRoutes = [
         }
       }
     ]
+  },
+  {
+    path: '/system-mg',
+    component: Layout,
+    redirect: '/system-mg/menu',
+    alwaysShow: true, // will always show the root menu
+    name: 'SystemMg',
+    meta: {
+      title: '系统管理',
+      icon: 'lock',
+      roles: ['admin', 'editor'] // you can set roles in root nav
+    },
+    children: [
+      {
+        path: 'menu',
+        component: () => import('@/views/system-mg/menu'),
+        name: 'Menu',
+        meta: {
+          title: '菜单管理',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
+      },
+      {
+        path: 'menu-addition',
+        component: () => import('@/views/system-mg/menu-addition'),
+        name: 'MenuAddition',
+        hidden: true,
+        meta: {
+          title: '新增菜单',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
+      },
+      {
+        path: 'function',
+        component: () => import('@/views/system-mg/function'),
+        name: 'Function',
+        meta: {
+          title: '功能管理',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
+      },
+      {
+        path: 'role',
+        component: () => import('@/views/system-mg/role'),
+        name: 'Role',
+        meta: {
+          title: '角色管理',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
+      }
+    ]
   }
 ]
 // export const asyncRoutes = [

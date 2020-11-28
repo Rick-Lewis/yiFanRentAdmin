@@ -1,14 +1,14 @@
 <template>
-  <div class="department-container">
+  <div class="menu-container">
     <div class="header">
       <el-form ref="form" :model="conditionForm" label-width="85px" label-suffix="：">
-        <el-form-item label="审批状态">
+        <el-form-item label="菜单状态">
           <el-radio-group v-model="conditionForm.status" size="small" @change="handleRadioGroupChange">
             <el-radio v-for="(item, index) in conditionForm.statusList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <div class="other-container">
-          <el-form-item label="部门名称">
+          <el-form-item label="菜单名称">
             <el-input v-model="conditionForm.reason" placeholder="请输入关键字搜索" />
           </el-form-item>
           <el-form-item>
@@ -17,7 +17,7 @@
         </div>
       </el-form>
     </div>
-    <div style="margin-top: 10px;"><el-button type="primary" @click="handleAddtionClick">+新增部门</el-button></div>
+    <div style="margin-top: 10px;"><el-button type="primary" @click="handleAddtionClick">+新增</el-button></div>
     <div class="content">
       <el-table
         :data="tableData"
@@ -25,7 +25,19 @@
         :tree-props="{children: 'children'}"
         border
       >
-        <el-table-column prop="name" label="部门" align="center" min-width="100px" />
+        <el-table-column prop="name" label="菜单名称" align="center" min-width="100px" />
+        <el-table-column prop="icon" label="图标" align="center">
+          <template slot-scope="scope"><div><i :class="scope.row.icon" /></div></template>
+        </el-table-column>
+        <el-table-column prop="url" label="菜单地址" align="center" min-width="165px" />
+        <el-table-column prop="code" label="唯一标识" align="center" />
+        <el-table-column prop="is_menu" label="类型" align="center">
+          <template slot-scope="scope"><div>{{ scope.row.is_menu ? '菜单' : '功能' }}</div></template>
+        </el-table-column>
+        <el-table-column prop="note" label="排序号" align="center" />
+        <el-table-column prop="functions" label="包含功能" align="center">
+          <template slot-scope="scope"><div>{{ getFuncLabels(scope.row.functions) }}</div></template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" align="center">
           <template slot-scope="scope"><div>{{ scope.row.status ? '已启用' : '已停用' }}</div></template>
         </el-table-column>
@@ -40,25 +52,6 @@
         </el-table-column>
       </el-table>
     </div>
-    <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增部门' : '编辑部门'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
-      <el-form ref="additionForm" :model="addtionForm" :rules="additionFormRules" style="padding-right: 40px;">
-        <el-form-item label="上级部门" label-width="100px">
-          <el-cascader
-            v-model="addtionForm.parent"
-            :options="tableData"
-            :props="{ checkStrictly: true, label: 'name', value: 'id'}"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="部门名称" label-width="100px" prop="name">
-          <el-input v-model="addtionForm.name" placeholder="请输入部门的名称" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="handleAddCancel">取 消</el-button>
-        <el-button type="primary" @click="handleAddConfirm">确 定</el-button>
-      </div>
-    </el-dialog>
     <el-dialog
       title="提示"
       :visible.sync="confirmDialog.dialogFormVisible"
@@ -74,26 +67,15 @@
   </div>
 </template>
 <script>
-import { fetchDepartmentList, addDepartment } from '@/api/org-mg'
+import { fetchMenuList, menuToggleStatus } from '@/api/system-mg'
 import { Message } from 'element-ui'
 export default {
-  name: 'Department',
+  name: 'Menu',
   components: {},
   data: function() {
     return {
       confirmDialog: {
         dialogFormVisible: false
-      },
-      addtionForm: {
-        parent: [],
-        name: ''
-      },
-      additionFormRules: {
-        name: [{ required: true, message: '请输入部门的名称', trigger: ['blur'] }]
-      },
-      dialogConfig: {
-        dialogFormVisible: false,
-        currentStatus: '' // 当前的状态，编辑（edit）或者是新增（add）
       },
       currentItem: null, // 记录当前状态下操作的目标数据
       conditionForm: {
@@ -116,38 +98,43 @@ export default {
     }
   },
   computed: {},
-  created() {},
-  mounted() {
+  created() {
     const dataTemp = {
       pageIndex: this.pageIndex,
       pageSize: this.pageSize
     }
-    fetchDepartmentList(dataTemp).then(res => {
-      console.log('enterprise.vue mounted fetchDepartmentList success', res)
-      this.handleDepartmentList(res.data.data, res.data.data)
-      this.tableData.push(...res.data.data)
+    fetchMenuList(dataTemp).then(res => {
+      console.log('menu.vue mounted fetchMenuList success', res)
+      const temp = this._.cloneDeep(res.data.data)
+      this.handleMenuList(temp, temp)
+      this.tableData.push(...temp)
     }).catch(err => {
-      console.log('enterprise.vue mounted fetchDepartmentList failure', err)
+      console.log('menu.vue mounted fetchMenuList failure', err)
     })
   },
+  mounted() {},
   methods: {
+    getFuncLabels(data) {
+      if (!data) return ''
+      return JSON.parse(data).map(item => item.label).join(',')
+    },
     handleBlockUpCancel() {
       this.currentItem = null
       this.confirmDialog.dialogFormVisible = false
     },
     handleStatusChange(row) {
-      console.log('enterprise.vue methods handleStatusChange', row)
+      console.log('menu.vue methods handleStatusChange', row)
       this.currentItem = row
       this.confirmDialog.dialogFormVisible = true
     },
     handleBlockUp() {
-      console.log('enterprise.vue methods handleBlockUp')
+      console.log('menu.vue methods handleBlockUp')
       const tempData = {
         id: this.currentItem.id,
-        status: this.currentItem.status === 0 ? 1 : 0
+        status: this.currentItem.status
       }
-      addDepartment(tempData).then(res => {
-        console.log('enterprise.vue mounted addDepartment success', res)
+      menuToggleStatus(tempData).then(res => {
+        console.log('menu.vue mounted menuToggleStatus success', res)
         this.handleBlockUpCancel()
         if (res.code === 0) {
           this.refreshView()
@@ -164,7 +151,7 @@ export default {
           })
         }
       }).catch(err => {
-        console.log('enterprise.vue mounted addDepartment failure', err)
+        console.log('menu.vue mounted menuToggleStatus failure', err)
         Message({
           message: '操作失败',
           type: 'warning',
@@ -173,15 +160,8 @@ export default {
       })
     },
     handleEdit(row) {
-      console.log('enterprise.vue methods handleEdit', row)
-      this.addtionForm = {
-        id: row.id,
-        name: row.label,
-        parent: [row.parent, row.id]
-      }
-      this.dialogConfig.currentStatus = 'edit'
-      this.dialogConfig.currentItem = row
-      this.dialogConfig.dialogFormVisible = true
+      console.log('menu.vue methods handleEdit', row)
+      this.$router.push({ path: `/system-mg/menu-addition?action=edit&id=${row.id}` })
     },
     refreshView() {
       // In order to make the cached page re-rendered
@@ -195,11 +175,11 @@ export default {
         })
       })
     },
-    handleDepartmentList(target, data) {
+    handleMenuList(target, data) {
       if (target && target.length > 0) {
         for (let i = 0; i < target.length; i++) {
           for (let j = 0; j < data.length; j++) {
-            if (data[j].parent === target[i].id) { // 找到目标元素的children
+            if (data[j].pid === target[i].id) { // 找到目标元素的children
               if (!target[i].children) {
                 target[i].children = []
               }
@@ -208,7 +188,7 @@ export default {
               j--
             }
           }
-          this.handleDepartmentList(target[i].children, data)
+          this.handleMenuList(target[i].children, data)
         }
         return data
       } else {
@@ -216,86 +196,32 @@ export default {
       }
     },
     handleRadioGroupChange(val) {
-      console.log('enterprise.vue methods handleRadioGroupChange', val)
+      console.log('menu.vue methods handleRadioGroupChange', val)
       const dataTemp = {
         name: this.conditionForm.name,
         status: val === '-1' ? '' : val,
         pageIndex: 1,
         pageSize: this.pageSize
       }
-      fetchDepartmentList(dataTemp).then(res => {
-        console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+      fetchMenuList(dataTemp).then(res => {
+        console.log('menu.vue mounted fetchEnterpriseList success', res)
         this.tableData.length = 0
         // this.tableData.push(...res.data.data)
       }).catch(err => {
-        console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
-      })
-    },
-    handleAddCancel() {
-      this.addtionForm = {
-        name: '',
-        parent: []
-      }
-      this.$refs['additionForm'].clearValidate()
-      this.dialogConfig.currentStatus = ''
-      this.currentItem = null
-      this.dialogConfig.dialogFormVisible = false
-    },
-    handleAddConfirm() {
-      this.$refs['additionForm'].validate((valid) => {
-        if (valid) {
-          const temp = {
-            status: '1',
-            parent: this.addtionForm.parent[this.addtionForm.parent.length - 1],
-            name: this.addtionForm.name
-          }
-          addDepartment(temp).then(res => {
-            console.log('enterprise.vue mounted addDepartment success', res)
-            if (res.code === 0) {
-              this.refreshView()
-              this.handleAddCancel()
-              Message({
-                message: res.message,
-                type: 'success',
-                duration: 5 * 1000
-              })
-            } else {
-              Message({
-                message: res.message,
-                type: 'warning',
-                duration: 5 * 1000
-              })
-            }
-          }).catch(err => {
-            console.log('enterprise.vue mounted addDepartment failure', err)
-            Message({
-              message: '操作失败',
-              type: 'warning',
-              duration: 5 * 1000
-            })
-          })
-          return true
-        } else {
-          return false
-        }
+        console.log('menu.vue mounted fetchEnterpriseList failure', err)
       })
     },
     handleAddtionClick() {
-      this.addtionForm = {
-        parent: [],
-        name: ''
-      }
-      this.dialogConfig.currentStatus = 'add'
-      this.dialogConfig.dialogFormVisible = true
+      this.$router.push({ path: '/system-mg/menu-addition' })
     },
     onSubmit() {
-      console.log('department.vue methods onSubmit')
+      console.log('menu.vue methods onSubmit')
     }
   }
 }
 </script>
 <style lang='scss' scoped>
-.department-container{
+.menu-container{
   min-height: calc(100vh - 84px);
   background-color: #eef0f3;
   padding: 16px;
