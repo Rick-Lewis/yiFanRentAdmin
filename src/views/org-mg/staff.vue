@@ -177,6 +177,11 @@ export default {
       this.total = res.data.total
     }).catch(err => {
       console.log('staff.vue mounted fetchStaffList failure', err)
+      Message({
+        message: '操作失败',
+        type: 'warning',
+        duration: 5 * 1000
+      })
     })
   },
   methods: {

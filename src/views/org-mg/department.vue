@@ -41,17 +41,17 @@
       </el-table>
     </div>
     <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增部门' : '编辑部门'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
-      <el-form ref="additionForm" :model="addtionForm" :rules="additionFormRules" style="padding-right: 40px;">
+      <el-form ref="additionForm" :model="additionForm" :rules="additionFormRules" style="padding-right: 40px;">
         <el-form-item label="上级部门" label-width="100px">
           <el-cascader
-            v-model="addtionForm.parent"
+            v-model="additionForm.parent"
             :options="tableData"
             :props="{ checkStrictly: true, label: 'name', value: 'id'}"
             style="width: 100%"
           />
         </el-form-item>
         <el-form-item label="部门名称" label-width="100px" prop="name">
-          <el-input v-model="addtionForm.name" placeholder="请输入部门的名称" />
+          <el-input v-model="additionForm.name" placeholder="请输入部门的名称" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -84,7 +84,7 @@ export default {
       confirmDialog: {
         dialogFormVisible: false
       },
-      addtionForm: {
+      additionForm: {
         parent: [],
         name: ''
       },
@@ -174,7 +174,7 @@ export default {
     },
     handleEdit(row) {
       console.log('enterprise.vue methods handleEdit', row)
-      this.addtionForm = {
+      this.additionForm = {
         id: row.id,
         name: row.label,
         parent: [row.parent, row.id]
@@ -232,7 +232,7 @@ export default {
       })
     },
     handleAddCancel() {
-      this.addtionForm = {
+      this.additionForm = {
         name: '',
         parent: []
       }
@@ -246,8 +246,8 @@ export default {
         if (valid) {
           const temp = {
             status: '1',
-            parent: this.addtionForm.parent[this.addtionForm.parent.length - 1],
-            name: this.addtionForm.name
+            parent: this.additionForm.parent[this.additionForm.parent.length - 1],
+            name: this.additionForm.name
           }
           addDepartment(temp).then(res => {
             console.log('enterprise.vue mounted addDepartment success', res)
@@ -281,7 +281,7 @@ export default {
       })
     },
     handleAddtionClick() {
-      this.addtionForm = {
+      this.additionForm = {
         parent: [],
         name: ''
       }

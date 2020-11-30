@@ -324,6 +324,15 @@ export const asyncRoutes = [
           title: '角色管理',
           roles: ['admin'] // or you can only set roles in sub nav
         }
+      },
+      {
+        path: 'check-flow',
+        component: () => import('@/views/system-mg/check-flow'),
+        name: 'CheckFlow',
+        meta: {
+          title: '审批流管理',
+          roles: ['admin'] // or you can only set roles in sub nav
+        }
       }
     ]
   }

@@ -72,10 +72,31 @@ export function getFunctionDetail(data) {
     method: 'get'
   })
 }
-export function functionToggleStatus(data) {
+export function deleteFunction(data) {
   return request({
     url: `/officialcars/function/delete/${data.id}`,
     method: 'delete'
   })
 }
 
+// 审批流配置
+export function fetchFlowList(data) {
+  return request({
+    url: `/officialcars/check/flow/page`,
+    method: 'get',
+    params: data
+  })
+}
+export function addCheckNode(data) {
+  return request({
+    url: '/officialcars/check/flow/save',
+    method: 'post',
+    data
+  })
+}
+export function deleteCheckNode(data) {
+  return request({
+    url: `/officialcars/check/flow/delete/${data.id}`,
+    method: 'delete'
+  })
+}

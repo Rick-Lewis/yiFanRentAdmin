@@ -135,48 +135,6 @@ export default {
       pageIndex: this.pageIndex,
       pageSize: this.pageSize
     }
-    // if (this.$route.query.action === 'edit') {
-    //   fetchMenuList(dataTemp).then(res => {
-    //     console.log('menu-addition.vue created fetchMenuList success', res)
-    //     this.tempData = res.data.data
-    //     const temp = this._.cloneDeep(res.data.data)
-    //     this.handleMenuList(temp, temp)
-    //     this.form.pOptions.push(...temp)
-    //     return getMenuDetail({ id: this.$route.query.id })
-    //   }).then(res => {
-    //     console.log('menu-addition.vue created getMenuDetail success', res)
-    //     const tempType = this.form.typeOptions.find(item => item.value === res.data.is_menu)
-    //     this.form = Object.assign(this.form, {
-    //       id: res.data.id,
-    //       status: res.data.status,
-    //       name: res.data.name,
-    //       pid: this.getCascaderList(this.tempData, res.data.id),
-    //       url: res.data.url,
-    //       code: res.data.code,
-    //       type: {
-    //         label: tempType.label,
-    //         value: tempType.value
-    //       },
-    //       icon: {
-    //         label: res.data.icon,
-    //         value: res.data.icon
-    //       },
-    //       note: res.data.note,
-    //       functions: res.data.functions
-    //     })
-    //   }).catch(err => {
-    //     console.log('menu-addition.vue created fetchMenuList failure', err)
-    //   })
-    // } else {
-    //   fetchMenuList(dataTemp).then(res => {
-    //     console.log('menu-addition.vue created fetchMenuList success', res)
-    //     const temp = this._.cloneDeep(res.data.data)
-    //     this.handleMenuList(temp, temp)
-    //     this.form.pOptions.push(...temp)
-    //   }).catch(err => {
-    //     console.log('menu-addition.vue created fetchMenuList failure', err)
-    //   })
-    // }
     const p1 = fetchMenuList(dataTemp).then(res => {
       console.log('menu-addition.vue created fetchMenuList success', res)
       const temp = this._.cloneDeep(res.data.data)

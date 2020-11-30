@@ -74,7 +74,7 @@
   </div>
 </template>
 <script>
-import { fetchFunctionList, addFunction, functionToggleStatus } from '@/api/system-mg'
+import { fetchFunctionList, addFunction, deleteFunction } from '@/api/system-mg'
 import { Message } from 'element-ui'
 let id = 1000
 export default {
@@ -149,7 +149,7 @@ export default {
         id: this.currentItem.id,
         status: this.currentItem.status
       }
-      functionToggleStatus(tempData).then(res => {
+      deleteFunction(tempData).then(res => {
         console.log('function.vue mounted toggleStatus success', res)
         this.handleBlockUpCancel()
         if (res.code === 0) {
