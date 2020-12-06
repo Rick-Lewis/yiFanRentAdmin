@@ -42,6 +42,16 @@
     </div>
     <el-dialog :title="dialogConfig.currentStatus === 'add' ? '新增企业' : '编辑企业'" :visible.sync="dialogConfig.dialogFormVisible" width="30%">
       <el-form ref="additionForm" :model="additionForm" :rules="additionFormRules" style="padding-right: 40px;">
+        <el-form-item label="类型" label-width="120px" prop="type">
+          <el-select v-model="additionForm.type" placeholder="请选择类型" style="width: 100%;" @change="handleSelectChange">
+            <el-option v-for="(item, index) in dialogConfig.typeOptions" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="additionForm.type === 0" label="机构" label-width="120px" prop="parent">
+          <el-select v-model="additionForm.parent" placeholder="请选择所属机构" style="width: 100%;">
+            <el-option v-for="(item, index) in dialogConfig.orgList" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="单位名称" label-width="120px" prop="name">
           <el-input v-model="additionForm.name" placeholder="请输入单位名称" />
         </el-form-item>
@@ -124,6 +134,8 @@ export default {
         dialogFormVisible: false
       },
       additionForm: {
+        type: 0,
+        parent: '',
         name: '',
         note: '',
         invoice_title: '',
@@ -136,6 +148,8 @@ export default {
         }
       },
       additionFormRules: {
+        type: [{ required: true, message: '请选择类型', trigger: ['blur'] }],
+        parent: [{ required: true, message: '请选择所属机构', trigger: ['blur'] }],
         name: [{ required: true, message: '请输入单位名称', trigger: ['blur'] }],
         note: [{ required: true, message: '请输入单位编号', trigger: ['blur'] }],
         invoice_title: [{ required: true, message: '请输入发票抬头', trigger: ['blur'] }],
@@ -149,7 +163,15 @@ export default {
       },
       dialogConfig: {
         dialogFormVisible: false,
-        currentStatus: '' // 当前的状态，编辑（edit）或者是新增（add）
+        currentStatus: '', // 当前的状态，编辑（edit）或者是新增（add
+        typeOptions: [{
+          id: 0,
+          name: '企业'
+        }, {
+          id: 1,
+          name: '机构'
+        }],
+        orgList: []
       },
       currentIndex: -1, // 记录当前状态下操作的目标数据的索引
       conditionForm: {
@@ -188,6 +210,23 @@ export default {
     })
   },
   methods: {
+    handleSelectChange(val) {
+      console.log('enterprise.vue methods handleSelectChange', val)
+      this.additionForm.type = parseInt(val)
+      if (val === 0) {
+        const dataTemp = {
+          pageIndex: 0,
+          pageSize: 1000
+        }
+        fetchEnterpriseList(dataTemp).then(res => {
+          console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+          this.dialogConfig.orgList.length === 0
+          this.dialogConfig.orgList.push(...res.data.data)
+        }).catch(err => {
+          console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
+        })
+      }
+    },
     handleBlockUpCancel() {
       this.currentIndex = -1
       this.confirmDialog.dialogFormVisible = false
@@ -323,6 +362,8 @@ export default {
     },
     handleAddtionClick() {
       this.additionForm = {
+        type: 0,
+        parent: '',
         name: '',
         note: '',
         invoice_title: '',
@@ -336,6 +377,17 @@ export default {
       }
       this.dialogConfig.currentStatus = 'add'
       this.dialogConfig.dialogFormVisible = true
+      const dataTemp = {
+        pageIndex: 0,
+        pageSize: 1000
+      }
+      fetchEnterpriseList(dataTemp).then(res => {
+        console.log('enterprise.vue mounted fetchEnterpriseList success', res)
+        this.dialogConfig.orgList.length === 0
+        this.dialogConfig.orgList.push(...res.data.data)
+      }).catch(err => {
+        console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
+      })
     },
     onSearch() {
       console.log('enterprise.vue methods onSearch')

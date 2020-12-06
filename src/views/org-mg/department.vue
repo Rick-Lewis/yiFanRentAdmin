@@ -2,14 +2,14 @@
   <div class="department-container">
     <div class="header">
       <el-form ref="form" :model="conditionForm" label-width="85px" label-suffix="：">
-        <el-form-item label="审批状态">
+        <el-form-item label="部门状态">
           <el-radio-group v-model="conditionForm.status" size="small" @change="handleRadioGroupChange">
             <el-radio v-for="(item, index) in conditionForm.statusList" :key="index" :label="item.label" border>{{ item.value }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <div class="other-container">
           <el-form-item label="部门名称">
-            <el-input v-model="conditionForm.reason" placeholder="请输入关键字搜索" />
+            <el-input v-model="conditionForm.name" placeholder="请输入关键字搜索" />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSubmit">查询</el-button>
@@ -26,6 +26,7 @@
         border
       >
         <el-table-column prop="name" label="部门" align="center" min-width="100px" />
+        <el-table-column prop="enterprise_name" label="所属企业" align="center" />
         <el-table-column prop="status" label="状态" align="center">
           <template slot-scope="scope"><div>{{ scope.row.status ? '已启用' : '已停用' }}</div></template>
         </el-table-column>
@@ -220,13 +221,14 @@ export default {
       const dataTemp = {
         name: this.conditionForm.name,
         status: val === '-1' ? '' : val,
-        pageIndex: 1,
+        pageIndex: this.pageIndex,
         pageSize: this.pageSize
       }
       fetchDepartmentList(dataTemp).then(res => {
         console.log('enterprise.vue mounted fetchEnterpriseList success', res)
         this.tableData.length = 0
-        // this.tableData.push(...res.data.data)
+        this.handleDepartmentList(res.data.data, res.data.data)
+        this.tableData.push(...res.data.data)
       }).catch(err => {
         console.log('enterprise.vue mounted fetchEnterpriseList failure', err)
       })
@@ -290,6 +292,37 @@ export default {
     },
     onSubmit() {
       console.log('department.vue methods onSubmit')
+      const dataTemp = {
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      if (this.conditionForm.status !== '-1') {
+        dataTemp.status = this.conditionForm.status
+      }
+      if (this.conditionForm.name) {
+        dataTemp.name = this.conditionForm.name
+      }
+      fetchDepartmentList(dataTemp).then(res => {
+        console.log('enterprise.vue onSubmit fetchDepartmentList success', res)
+        if (res.code === 0) {
+          this.handleDepartmentList(res.data.data, res.data.data)
+          this.tableData.length = 0
+          this.tableData.push(...res.data.data)
+        } else {
+          Message({
+            message: res.message,
+            type: 'warning',
+            duration: 5 * 1000
+          })
+        }
+      }).catch(err => {
+        console.log('enterprise.vue onSubmit fetchDepartmentList failure', err)
+        Message({
+          message: '操作失败',
+          type: 'warning',
+          duration: 5 * 1000
+        })
+      })
     }
   }
 }
